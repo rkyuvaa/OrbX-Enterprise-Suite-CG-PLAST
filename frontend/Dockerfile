@@ -7,7 +7,7 @@ COPY package*.json ./
 RUN npm install --silent
 
 COPY . .
-RUN npm run build
+RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
 # Stage 2: Production Nginx Server
 FROM nginx:alpine
