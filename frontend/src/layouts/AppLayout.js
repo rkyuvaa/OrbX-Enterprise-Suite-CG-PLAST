@@ -311,6 +311,21 @@ const AppLayout = () => {
     }
   ];
 
+  const filteredMenuConfig = menuConfig.map(item => {
+    if (item.id === 'admin') {
+      return {
+        ...item,
+        subItems: item.subItems.filter(sub => {
+          if (sub.to === '/admin/users' || sub.to === '/admin/backup') {
+            return user?.role_name === 'Super Admin';
+          }
+          return true;
+        })
+      };
+    }
+    return item;
+  });
+
   const isMenuCategoryActive = (item) => {
     const p = path.toLowerCase();
     if (item.id === 'accounts') return p.startsWith('/accounts');
@@ -393,7 +408,7 @@ const AppLayout = () => {
 
         <List sx={{ pt: 0, flexGrow: 1 }}>
           {/* Module Navigation items */}
-          {menuConfig.map((item) => {
+          {filteredMenuConfig.map((item) => {
             const isActive = isMenuCategoryActive(item);
             const hasSubItems = item.subItems && item.subItems.length > 0;
 

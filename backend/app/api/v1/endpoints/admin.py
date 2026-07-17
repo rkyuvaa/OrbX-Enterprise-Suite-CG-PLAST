@@ -14,6 +14,14 @@ from app.services.admin_service import AdminService
 router = APIRouter()
 
 
+def require_super_admin(current_user):
+    if current_user.role.name != "Super Admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Only Super Admin can perform this action."
+        )
+
+
 # ==========================================
 # COMPANY ENDPOINTS
 # ==========================================
@@ -154,6 +162,7 @@ async def list_roles(
     current_user = Depends(deps.PermissionChecker("admin", "view"))
 ):
     """List all user roles and permissions."""
+    require_super_admin(current_user)
     return await AdminService.list_roles(db)
 
 
@@ -164,6 +173,7 @@ async def create_role(
     current_user = Depends(deps.PermissionChecker("admin", "create"))
 ):
     """Create a new user role with a permission matrix."""
+    require_super_admin(current_user)
     return await AdminService.create_role(db, role_data)
 
 
@@ -175,6 +185,7 @@ async def update_role(
     current_user = Depends(deps.PermissionChecker("admin", "edit"))
 ):
     """Update a role and its permission checklist."""
+    require_super_admin(current_user)
     return await AdminService.update_role(db, role_id, role_data)
 
 
@@ -187,6 +198,7 @@ async def list_users(
     current_user = Depends(deps.PermissionChecker("admin", "view"))
 ):
     """List all system user profiles."""
+    require_super_admin(current_user)
     return await AdminService.list_users(db)
 
 
@@ -197,6 +209,7 @@ async def create_user(
     current_user = Depends(deps.PermissionChecker("admin", "create"))
 ):
     """Create a new user account."""
+    require_super_admin(current_user)
     return await AdminService.create_user(db, user_data)
 
 
@@ -208,6 +221,7 @@ async def update_user(
     current_user = Depends(deps.PermissionChecker("admin", "edit"))
 ):
     """Update a user's details, active status, branch mapping, or password."""
+    require_super_admin(current_user)
     return await AdminService.update_user(db, user_id, user_data)
 
 
@@ -342,6 +356,7 @@ def run_restore_in_background(temp_zip: str, temp_extract: str):
 @router.get("/backups")
 def get_backups(current_user = Depends(deps.PermissionChecker("admin", "view"))):
     """Retrieve lists of database backup files."""
+    require_super_admin(current_user)
     from app.services.backup_manager import list_backups
     return list_backups()
 
@@ -349,6 +364,7 @@ def get_backups(current_user = Depends(deps.PermissionChecker("admin", "view")))
 @router.post("/backups/generate")
 def generate_backup(current_user = Depends(deps.PermissionChecker("admin", "edit"))):
     """Manually generate a snapshot ZIP archive of the PostgreSQL database."""
+    require_super_admin(current_user)
     from app.services.backup_manager import create_backup, delete_old_backups
     try:
         name, err = create_backup()
@@ -365,6 +381,7 @@ def generate_backup(current_user = Depends(deps.PermissionChecker("admin", "edit
 @router.get("/backups/{filename}/download")
 def download_backup(filename: str, current_user = Depends(deps.PermissionChecker("admin", "view"))):
     """Download a generated backup snapshot ZIP file."""
+    require_super_admin(current_user)
     import os
     from fastapi import HTTPException
     from fastapi.responses import FileResponse
@@ -384,6 +401,7 @@ async def restore_backup(
     current_user = Depends(deps.PermissionChecker("admin", "edit"))
 ):
     """Upload a backup snapshot ZIP file to restore the database in the background."""
+    require_super_admin(current_user)
     import os
     import shutil
     from fastapi import HTTPException
@@ -409,5 +427,6 @@ async def restore_backup(
 @router.get("/backups/restore/status")
 def get_restore_status(current_user = Depends(deps.PermissionChecker("admin", "view"))):
     """Retrieve current background system restoration status."""
+    require_super_admin(current_user)
     return RESTORE_STATUS
 

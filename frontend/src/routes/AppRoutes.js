@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
+import { useSelector } from 'react-redux';
+
 // Layouts
 import AuthLayout from '../layouts/AuthLayout';
 import AppLayout from '../layouts/AppLayout';
@@ -60,6 +62,8 @@ import RecyclingBOM from '../pages/Recycling/BOM';
 import RecyclingProcess from '../pages/Recycling/RecyclingProcess';
 
 const AppRoutes = () => {
+  const { user } = useSelector((state) => state.auth);
+
   return (
     <Routes>
       {/* Public Auth Routes */}
@@ -116,8 +120,8 @@ const AppRoutes = () => {
           <Route path="company" element={<Companies />} />
           <Route path="companies" element={<Companies />} />
           <Route path="branches" element={<Companies />} />
-          <Route path="users" element={<UsersAndRoles />} />
-          <Route path="backup" element={<BackupRestore />} />
+          <Route path="users" element={user?.role_name === 'Super Admin' ? <UsersAndRoles /> : <Navigate to="/" replace />} />
+          <Route path="backup" element={user?.role_name === 'Super Admin' ? <BackupRestore /> : <Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="company" replace />} />
         </Route>
 
