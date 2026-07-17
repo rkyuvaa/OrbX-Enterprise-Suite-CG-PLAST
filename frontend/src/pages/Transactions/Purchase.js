@@ -72,7 +72,7 @@ const Purchase = () => {
 
   const { user } = useSelector((state) => state.auth);
   const { activeBranchId } = useSelector((state) => state.branch);
-  const isSuperAdmin = user?.role_name === 'Super Admin';
+  const isSuperAdmin = user?.role_name === 'Super Admin' || user?.role_name === 'Admin';
 
   const loadData = async () => {
     try {

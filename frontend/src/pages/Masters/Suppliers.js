@@ -36,7 +36,7 @@ const Suppliers = () => {
 
   const { user } = useSelector((state) => state.auth);
   const { activeBranchId } = useSelector((state) => state.branch);
-  const isSuperAdmin = user?.role_name === 'Super Admin';
+  const isSuperAdmin = user?.role_name === 'Super Admin' || user?.role_name === 'Admin';
 
   const { control, handleSubmit, reset } = useForm({
     resolver: yupResolver(schema),

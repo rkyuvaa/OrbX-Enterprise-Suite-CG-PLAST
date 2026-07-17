@@ -41,7 +41,7 @@ const Products = () => {
   const [error, setError] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
-  const isSuperAdmin = user?.role_name === 'Super Admin';
+  const isSuperAdmin = user?.role_name === 'Super Admin' || user?.role_name === 'Admin';
 
   const { control: pControl, handleSubmit: pSubmit, reset: pReset } = useForm({
     resolver: yupResolver(productSchema),
