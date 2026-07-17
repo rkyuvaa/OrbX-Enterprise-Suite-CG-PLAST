@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Project Backups
+backend/app/backups/
+
+# Node/Vite build outputs
+node_modules/
+dist/
+build/
+.eslintcache
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

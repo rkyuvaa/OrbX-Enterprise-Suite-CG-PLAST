@@ -1,0 +1,139 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+// Layouts
+import AuthLayout from '../layouts/AuthLayout';
+import AppLayout from '../layouts/AppLayout';
+import ProtectedRoute from './ProtectedRoute';
+
+// Pages
+import Login from '../pages/Login';
+import Dashboard from '../pages/Dashboard';
+
+// Masters Module Pages
+import Customers from '../pages/Masters/Customers';
+import Suppliers from '../pages/Masters/Suppliers';
+import Products from '../pages/Masters/Products';
+
+// Transactions Module Pages
+import Purchase from '../pages/Transactions/Purchase';
+import Inventory from '../pages/Transactions/Inventory';
+import Sales from '../pages/Transactions/Sales';
+import Payments from '../pages/Transactions/Payments';
+import Receipts from '../pages/Transactions/Receipts';
+import CustomerLedger from '../pages/Transactions/CustomerLedger';
+import SupplierLedger from '../pages/Transactions/SupplierLedger';
+import VendorPayments from '../pages/Transactions/VendorPayments';
+
+// Reports Module Pages
+import ReportsDashboard from '../pages/Reports/ReportsDashboard';
+import SalesReport from '../pages/Reports/SalesReport';
+import InventoryReport from '../pages/Reports/InventoryReport';
+import PurchaseReport from '../pages/Reports/PurchaseReport';
+import ExcelSalesSummary from '../pages/Reports/ExcelSalesSummary';
+
+// Admin Module Pages
+import Companies from '../pages/Admin/Companies';
+import UsersAndRoles from '../pages/Admin/UsersAndRoles';
+import BackupRestore from '../pages/Admin/BackupRestore';
+
+// Accounts Module Pages
+import ChartOfAccounts from '../pages/Accounts/ChartOfAccounts';
+import VoucherTypes from '../pages/Accounts/VoucherTypes';
+import TrialBalance from '../pages/Accounts/TrialBalance';
+import GeneralLedger from '../pages/Accounts/GeneralLedger';
+import DayBook from '../pages/Accounts/DayBook';
+import PurchaseRegister from '../pages/Accounts/PurchaseRegister';
+import SalesRegister from '../pages/Accounts/SalesRegister';
+import BalanceSheet from '../pages/Accounts/BalanceSheet';
+import ProfitLoss from '../pages/Accounts/ProfitLoss';
+import CashFlow from '../pages/Accounts/CashFlow';
+import GstReturns from '../pages/Accounts/GstReturns';
+import TdsPayable from '../pages/Accounts/TdsPayable';
+import AuditTrail from '../pages/Accounts/AuditTrail';
+import CashBankBooks from '../pages/Accounts/CashBankBooks';
+import JournalRegister from '../pages/Accounts/JournalRegister';
+
+// Recycling Module Pages
+import RecyclingDashboard from '../pages/Recycling/Dashboard';
+import RecyclingBOM from '../pages/Recycling/BOM';
+import RecyclingProcess from '../pages/Recycling/RecyclingProcess';
+
+const AppRoutes = () => {
+  return (
+    <Routes>
+      {/* Public Auth Routes */}
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<Login />} />
+      </Route>
+
+      {/* Protected ERP Modules Routes */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<Dashboard />} />
+
+        {/* Masters Namespace */}
+        <Route path="/masters">
+          <Route path="customers" element={<Customers />} />
+          <Route path="suppliers" element={<Suppliers />} />
+          <Route path="products" element={<Products />} />
+          <Route path="*" element={<Navigate to="customers" replace />} />
+        </Route>
+
+        {/* Transactions Namespace */}
+        <Route path="/transactions">
+          <Route path="purchase" element={<Purchase />} />
+          <Route path="inventory" element={<Inventory />} />
+          <Route path="transfers" element={<Inventory />} />
+          <Route path="sales" element={<Sales />} />
+          <Route path="payments" element={<Payments />} />
+          <Route path="receipts" element={<Receipts />} />
+          <Route path="customer-ledger" element={<CustomerLedger />} />
+          <Route path="supplier-ledger" element={<SupplierLedger />} />
+          <Route path="vendor-payments" element={<VendorPayments />} />
+          <Route path="*" element={<Navigate to="purchase" replace />} />
+        </Route>
+
+        {/* Reports Namespace */}
+        <Route path="/reports">
+          <Route path="dashboard" element={<ReportsDashboard />} />
+          <Route path="sales" element={<SalesReport />} />
+          <Route path="inventory" element={<InventoryReport />} />
+          <Route path="purchase" element={<PurchaseReport />} />
+          <Route path="sales-summary" element={<ExcelSalesSummary />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
+        </Route>
+
+
+
+        {/* Admin Namespace */}
+        <Route path="/admin">
+          <Route path="company" element={<Companies />} />
+          <Route path="companies" element={<Companies />} />
+          <Route path="branches" element={<Companies />} />
+          <Route path="users" element={<UsersAndRoles />} />
+          <Route path="backup" element={<BackupRestore />} />
+          <Route path="*" element={<Navigate to="company" replace />} />
+        </Route>
+
+        {/* Recycling Namespace */}
+        <Route path="/recycling">
+          <Route path="" element={<RecyclingProcess />} />
+          <Route path="bom" element={<RecyclingBOM />} />
+          <Route path="process" element={<RecyclingProcess />} />
+          <Route path="*" element={<Navigate to="" replace />} />
+        </Route>
+      </Route>
+
+      {/* Catch-all Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+export default AppRoutes;

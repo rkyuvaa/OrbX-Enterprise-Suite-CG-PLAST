@@ -1,0 +1,53 @@
+from typing import List, Optional
+from uuid import UUID
+from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core import deps
+from app.schemas.master import SupplierOut, SupplierCreate, SupplierUpdate
+from app.services.master_services import MasterServices
+
+router = APIRouter()
+
+
+@router.get("/", response_model=List[SupplierOut])
+async def list_suppliers(
+    company_id: Optional[UUID] = Query(None, description="Filter suppliers by company"),
+    search: Optional[str] = Query(None, description="Search query for supplier name or code"),
+    db: AsyncSession = Depends(deps.get_db),
+    current_user = Depends(deps.PermissionChecker("masters", "view"))
+):
+    """Retrieve list of operating suppliers."""
+    return await MasterServices.list_suppliers(db, company_id, search)
+
+
+@router.post("/", response_model=SupplierOut, status_code=status.HTTP_201_CREATED)
+async def create_supplier(
+    supplier_data: SupplierCreate,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user = Depends(deps.PermissionChecker("masters", "create"))
+):
+    """Create a new supplier master record."""
+    return await MasterServices.create_supplier(db, supplier_data)
+
+
+@router.put("/{supplier_id}", response_model=SupplierOut)
+async def update_supplier(
+    supplier_id: UUID,
+    supplier_data: SupplierUpdate,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user = Depends(deps.PermissionChecker("masters", "edit"))
+):
+    """Update supplier profile details."""
+    return await MasterServices.update_supplier(db, supplier_id, supplier_data)
+
+
+@router.delete("/{supplier_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_supplier(
+    supplier_id: UUID,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user = Depends(deps.PermissionChecker("masters", "delete"))
+):
+    """Delete supplier master record."""
+    await MasterServices.delete_supplier(db, supplier_id)
+    return None
