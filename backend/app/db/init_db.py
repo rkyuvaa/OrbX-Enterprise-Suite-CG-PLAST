@@ -43,6 +43,7 @@ async def init_db(db: AsyncSession) -> None:
     # 2. Create Default Roles
     roles_to_create = [
         {"name": "Super Admin", "desc": "Full root-level administration access to all modules."},
+        {"name": "Admin", "desc": "Standard administration access (except Users & Roles and Backups)."},
         {"name": "Branch Manager", "desc": "Management control over local masters and transactional processes."},
         {"name": "Sales Executive", "desc": "Execute customer interactions, sales orders, billing, and payment processing."},
         {"name": "Purchase Manager", "desc": "Manage supplier relations, procurement orders, and receipts."},
@@ -83,6 +84,27 @@ async def init_db(db: AsyncSession) -> None:
             if not p:
                 p = Permission(
                     role_id=super_admin_role.id,
+                    module=mod,
+                    action=act,
+                    is_allowed=True
+                )
+                db.add(p)
+
+    # Admin -> All allowed (access checked in code guards)
+    admin_role = seeded_roles["Admin"]
+    for mod in modules:
+        for act in actions:
+            query_p = await db.execute(
+                select(Permission).filter(
+                    Permission.role_id == admin_role.id,
+                    Permission.module == mod,
+                    Permission.action == act
+                )
+            )
+            p = query_p.scalar_one_or_none()
+            if not p:
+                p = Permission(
+                    role_id=admin_role.id,
                     module=mod,
                     action=act,
                     is_allowed=True
