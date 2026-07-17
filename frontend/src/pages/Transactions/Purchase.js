@@ -710,6 +710,7 @@ const Purchase = () => {
         <Tabs value={tabIndex} onChange={(e, idx) => setTabIndex(idx)} sx={{ px: 2, borderBottom: '1px solid #e2e8f0' }}>
           <Tab label="Purchase Orders" sx={{ fontWeight: 600 }} />
           <Tab label="Goods Receipt Notes (GRN)" sx={{ fontWeight: 600 }} />
+          <Tab label="Purchase Bills / Invoices" sx={{ fontWeight: 600 }} />
         </Tabs>
       </Paper>
 
@@ -780,6 +781,29 @@ const Purchase = () => {
             }] : [])
           ]}
           searchKey="status"
+        />
+      )}
+
+      {tabIndex === 2 && (
+        <CommonTable
+          columns={billColumns}
+          rows={bills}
+          actions={[
+            {
+              icon: <CancelIcon />,
+              label: 'Cancel Bill',
+              condition: (row) => row.status !== 'Cancelled',
+              onClick: handleCancelBill,
+              color: 'warning'
+            },
+            ...(isSuperAdmin ? [{
+              icon: <DeleteIcon />,
+              label: 'Delete Bill',
+              onClick: handleDeleteBill,
+              color: 'error'
+            }] : [])
+          ]}
+          searchKey="invoice_number"
         />
       )}
 
