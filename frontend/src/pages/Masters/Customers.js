@@ -34,6 +34,7 @@ const Customers = () => {
   const [error, setError] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
+  const { activeBranchId } = useSelector((state) => state.branch);
   const isSuperAdmin = user?.role_name === 'Super Admin';
 
   const { control, handleSubmit, reset } = useForm({
@@ -42,7 +43,8 @@ const Customers = () => {
 
   const loadCustomers = async () => {
     try {
-      const res = await apiClient.get('/customers/');
+      const query = activeBranchId ? `?company_id=${activeBranchId}` : '';
+      const res = await apiClient.get(`/customers/${query}`);
       setCustomers(res.data);
     } catch (err) {
       setError('Failed to load customer list.');
@@ -51,7 +53,7 @@ const Customers = () => {
 
   useEffect(() => {
     loadCustomers();
-  }, []);
+  }, [activeBranchId]);
 
   const handleOpenAdd = () => {
     setSelectedCustomer(null);
@@ -120,10 +122,11 @@ const Customers = () => {
 
   const onSubmit = async (data) => {
     try {
+      const payload = { ...data, company_id: activeBranchId };
       if (selectedCustomer) {
-        await apiClient.put(`/customers/${selectedCustomer.id}`, data);
+        await apiClient.put(`/customers/${selectedCustomer.id}`, payload);
       } else {
-        await apiClient.post('/customers/', data);
+        await apiClient.post('/customers/', payload);
       }
       setOpenModal(false);
       loadCustomers();

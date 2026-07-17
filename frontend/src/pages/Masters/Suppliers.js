@@ -35,6 +35,7 @@ const Suppliers = () => {
   const [error, setError] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
+  const { activeBranchId } = useSelector((state) => state.branch);
   const isSuperAdmin = user?.role_name === 'Super Admin';
 
   const { control, handleSubmit, reset } = useForm({
@@ -43,7 +44,8 @@ const Suppliers = () => {
 
   const loadSuppliers = async () => {
     try {
-      const res = await apiClient.get('/suppliers/');
+      const query = activeBranchId ? `?company_id=${activeBranchId}` : '';
+      const res = await apiClient.get(`/suppliers/${query}`);
       setSuppliers(res.data);
     } catch (err) {
       setError('Failed to load supplier list.');
@@ -52,7 +54,7 @@ const Suppliers = () => {
 
   useEffect(() => {
     loadSuppliers();
-  }, []);
+  }, [activeBranchId]);
 
   const handleOpenAdd = () => {
     setSelectedSupplier(null);
@@ -130,6 +132,7 @@ const Suppliers = () => {
         payment_terms: data.payment_terms || null,
         opening_bal: data.opening_bal || 0.0,
         opening_bal_type: data.opening_bal_type || 'Cr',
+        company_id: activeBranchId,
         bank_details: {
           bank_name: data.bank_name || null,
           bank_account_no: data.bank_account_no || null,
