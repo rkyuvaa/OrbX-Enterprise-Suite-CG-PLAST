@@ -297,7 +297,8 @@ const Sales = () => {
     try {
       const payload = {
         name: quickProductName,
-        sku: quickProductSKU || null,
+        sku: null,
+        hsn_code: quickProductSKU || null,
         product_type: quickProductType,
         category_id: null,
         uom: quickProductUOM,
@@ -1690,7 +1691,7 @@ const Sales = () => {
               />
             </Box>
             <TextField
-              label="SKU Code (Optional)"
+              label="HSN Code (Optional)"
               fullWidth
               size="small"
               value={quickProductSKU}
