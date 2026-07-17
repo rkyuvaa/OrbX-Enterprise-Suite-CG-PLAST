@@ -34,7 +34,7 @@ const AuthLayout = () => {
             src="/logo.svg"
             alt="OrbX Logo"
             sx={{
-              height: 94,
+              height: 113,
               width: 'auto',
               filter: 'drop-shadow(0px 4px 10px rgba(27, 67, 50, 0.15))',
               animation: 'pulse 3s infinite ease-in-out',
@@ -45,17 +45,6 @@ const AuthLayout = () => {
             }}
           />
           <Box>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 800,
-                color: 'primary.main',
-                letterSpacing: '-0.5px',
-                mb: 0.5,
-              }}
-            >
-              OrbX
-            </Typography>
             <Typography variant="body2" color="text.secondary">
               Enterprise Resource Planning Suite
             </Typography>
