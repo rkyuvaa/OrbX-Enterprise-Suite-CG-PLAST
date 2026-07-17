@@ -27,7 +27,9 @@ import {
   PriceCheck as ReceiveIcon,
   Payment as PayIcon,
   History as HistoryIcon,
-  Backup as BackupIcon
+  Backup as BackupIcon,
+  People as CustomerIcon,
+  LocalShipping as VendorIcon
 } from '@mui/icons-material';
 
 import { logoutUser, fetchUserProfile } from '../app/slices/authSlice';
@@ -54,7 +56,11 @@ const AppLayout = () => {
   useEffect(() => {
     const p = location.pathname.toLowerCase();
     let activeKey = null;
-    if (p.startsWith('/transactions/inventory') || p.startsWith('/masters/products')) {
+    if (p.startsWith('/transactions/purchase') || p.startsWith('/masters/suppliers')) {
+      activeKey = 'purchase';
+    } else if (p.startsWith('/transactions/sales') || p.startsWith('/masters/customers')) {
+      activeKey = 'sales';
+    } else if (p.startsWith('/transactions/inventory') || p.startsWith('/masters/products')) {
       activeKey = 'inventory';
     } else if (p.startsWith('/transactions/receipts') || p.startsWith('/transactions/payments') || p.startsWith('/transactions/vendor-payments')) {
       activeKey = 'payments';
@@ -235,7 +241,10 @@ const AppLayout = () => {
       id: 'purchase',
       icon: <PurchaseIcon />,
       color: '#E76F51',
-      to: '/transactions/purchase'
+      subItems: [
+        { label: 'Purchase Module', to: '/transactions/purchase', icon: <PurchaseIcon /> },
+        { label: 'Vendor Master', to: '/masters/suppliers', icon: <VendorIcon /> },
+      ]
     },
     {
       label: 'Inventory',
@@ -252,7 +261,10 @@ const AppLayout = () => {
       id: 'sales',
       icon: <SalesIcon />,
       color: '#F15BB5',
-      to: '/transactions/sales'
+      subItems: [
+        { label: 'Sales Module', to: '/transactions/sales', icon: <SalesIcon /> },
+        { label: 'Customer Master', to: '/masters/customers', icon: <CustomerIcon /> },
+      ]
     },
     {
       label: 'Recycling',
