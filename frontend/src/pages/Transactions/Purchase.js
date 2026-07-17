@@ -385,7 +385,8 @@ const Purchase = () => {
         email: quickSuppEmail || null,
         address: quickSuppAddress || null,
         opening_bal: parseFloat(quickSuppOpeningBal) || 0.0,
-        opening_bal_type: quickSuppOpeningBalType
+        opening_bal_type: quickSuppOpeningBalType,
+        company_id: activeBranchId
       };
       const res = await apiClient.post('/suppliers/', payload);
       const newSupp = res.data;

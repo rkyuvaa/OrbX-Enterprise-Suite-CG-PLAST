@@ -253,7 +253,8 @@ const Sales = () => {
         billing_address: quickCustAddress || null,
         shipping_address: quickCustAddress || null,
         opening_bal: parseFloat(quickCustOpeningBal) || 0.0,
-        opening_bal_type: quickCustOpeningBalType
+        opening_bal_type: quickCustOpeningBalType,
+        company_id: activeBranchId
       };
       const res = await apiClient.post('/customers/', payload);
       const newCust = res.data;
