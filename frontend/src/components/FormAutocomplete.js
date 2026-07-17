@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Controller } from 'react-hook-form';
 import { Autocomplete, TextField, CircularProgress } from '@mui/material';
+import { useSelector } from 'react-redux';
 import apiClient from '../api/client';
 
 const FormAutocomplete = ({
@@ -25,13 +26,17 @@ const FormAutocomplete = ({
   const [searchTerm, setSearchTerm] = useState('');
   const hasLoaded = useRef(false);
 
+  const { activeBranchId } = useSelector((state) => state.branch);
+
   const fetchOptions = useCallback(
     async (searchQuery = '') => {
       setLoading(true);
       try {
-        const res = await apiClient.get(endpoint, {
-          params: { search: searchQuery },
-        });
+        const params = { search: searchQuery };
+        if (activeBranchId) {
+          params.company_id = activeBranchId;
+        }
+        const res = await apiClient.get(endpoint, { params });
         setOptions(res.data);
         hasLoaded.current = true;
       } catch (err) {
@@ -40,7 +45,7 @@ const FormAutocomplete = ({
         setLoading(false);
       }
     },
-    [endpoint, label]
+    [endpoint, label, activeBranchId]
   );
 
   // Debounced search

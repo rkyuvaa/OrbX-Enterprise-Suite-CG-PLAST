@@ -28,6 +28,8 @@ async def create_supplier(
     current_user = Depends(deps.PermissionChecker("masters", "create"))
 ):
     """Create a new supplier master record."""
+    if not supplier_data.company_id and current_user.companies:
+        supplier_data.company_id = current_user.companies[0].id
     return await MasterServices.create_supplier(db, supplier_data)
 
 

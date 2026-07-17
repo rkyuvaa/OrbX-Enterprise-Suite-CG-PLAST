@@ -28,6 +28,8 @@ async def create_customer(
     current_user = Depends(deps.PermissionChecker("masters", "create"))
 ):
     """Create a new customer master record."""
+    if not customer_data.company_id and current_user.companies:
+        customer_data.company_id = current_user.companies[0].id
     return await MasterServices.create_customer(db, customer_data)
 
 
