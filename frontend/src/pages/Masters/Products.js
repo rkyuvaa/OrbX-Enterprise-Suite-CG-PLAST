@@ -62,6 +62,15 @@ const Products = () => {
     }
   };
 
+  const formatError = (err, fallback) => {
+    const detail = err.response?.data?.detail;
+    if (typeof detail === 'string') return detail;
+    if (Array.isArray(detail)) {
+      return detail.map(e => `${e.loc[e.loc.length - 1]}: ${e.msg}`).join(', ');
+    }
+    return fallback;
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -82,17 +91,22 @@ const Products = () => {
       category_id: '',
       uom: 'KG',
       hsn_code: '',
-      tax_rate: 18,
-      purchase_price: 0,
-      selling_price: 0,
-      min_stock_level: 0,
+      tax_rate: 18.0,
+      purchase_price: 0.0,
+      selling_price: 0.0,
+      min_stock_level: 0.0,
     });
+    setError(null);
     setOpenProductModal(true);
   };
 
   const handleOpenEditProduct = (product) => {
     setSelectedProduct(product);
-    pReset(product);
+    pReset({
+      ...product,
+      category_id: product.category_id || '',
+    });
+    setError(null);
     setOpenProductModal(true);
   };
 
@@ -102,7 +116,7 @@ const Products = () => {
         await apiClient.put(`/products/${product.id}`, { is_active: false });
         loadData();
       } catch (err) {
-        setError('Failed to deactivate product.');
+        setError(formatError(err, 'Failed to deactivate product.'));
       }
     }
   };
@@ -112,7 +126,7 @@ const Products = () => {
       await apiClient.put(`/products/${product.id}`, { is_active: true });
       loadData();
     } catch (err) {
-      setError('Failed to activate product.');
+      setError(formatError(err, 'Failed to activate product.'));
     }
   };
 
@@ -122,22 +136,28 @@ const Products = () => {
         await apiClient.delete(`/products/${product.id}`);
         loadData();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to delete product.');
+        setError(formatError(err, 'Failed to delete product.'));
       }
     }
   };
 
   const onProductSubmit = async (data) => {
     try {
+      const payload = {
+        ...data,
+        category_id: data.category_id || null,
+        sku: data.sku || null,
+        hsn_code: data.hsn_code || null,
+      };
       if (selectedProduct) {
-        await apiClient.put(`/products/${selectedProduct.id}`, data);
+        await apiClient.put(`/products/${selectedProduct.id}`, payload);
       } else {
-        await apiClient.post('/products/', data);
+        await apiClient.post('/products/', payload);
       }
       setOpenProductModal(false);
       loadData();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to save product catalog details.');
+      setError(formatError(err, 'Failed to save product catalog details.'));
     }
   };
 
@@ -147,12 +167,14 @@ const Products = () => {
   const handleOpenAddCategory = () => {
     setSelectedCategory(null);
     cReset({ name: '', description: '' });
+    setError(null);
     setOpenCategoryModal(true);
   };
 
   const handleOpenEditCategory = (category) => {
     setSelectedCategory(category);
     cReset(category);
+    setError(null);
     setOpenCategoryModal(true);
   };
 
@@ -162,7 +184,7 @@ const Products = () => {
         await apiClient.delete(`/products/categories/${category.id}`);
         loadData();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to delete category.');
+        setError(formatError(err, 'Failed to delete category.'));
       }
     }
   };
@@ -177,7 +199,7 @@ const Products = () => {
       setOpenCategoryModal(false);
       loadData();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to save category.');
+      setError(formatError(err, 'Failed to save category.'));
     }
   };
 

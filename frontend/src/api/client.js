@@ -36,7 +36,7 @@ apiClient.interceptors.response.use(
         try {
           // Attempt token refresh rotation
           // Pass refresh token as query param according to backend spec
-          const res = await axios.post(`/api/v1/auth/refresh?refresh_token_str=${refreshToken}`);
+          const res = await axios.post(`/api/v1/auth/refresh?refresh_token_str=${encodeURIComponent(refreshToken)}`);
           
           if (res.status === 200) {
             const { access_token, refresh_token } = res.data;
