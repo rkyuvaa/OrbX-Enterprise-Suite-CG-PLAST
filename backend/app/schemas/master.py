@@ -246,16 +246,16 @@ class ProductOut(BaseModel):
     id: UUID
     name: str
     sku: Optional[str] = None
-    product_type: str
+    product_type: Optional[str] = "RAW"
     category_id: Optional[UUID] = None
-    uom: str
+    uom: Optional[str] = "KG"
     hsn_code: Optional[str] = None
-    tax_rate: float
-    purchase_price: float
-    selling_price: float
-    min_stock_level: float
+    tax_rate: Optional[float] = 18.0
+    purchase_price: Optional[float] = 0.0
+    selling_price: Optional[float] = 0.0
+    min_stock_level: Optional[float] = 0.0
     pricing_overrides: List[ProductPricingOut] = []
-    is_active: bool
+    is_active: Optional[bool] = True
     created_at: datetime
 
     class Config:
