@@ -290,6 +290,18 @@ const Inventory = () => {
     }
   };
 
+  const handleDeleteTransfer = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this Delivery Challan? This action is permanent.')) {
+      return;
+    }
+    try {
+      await apiClient.delete(`/inventory/transfers/${id}`);
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to delete Stock Transfer.');
+    }
+  };
+
   const handleOpenPrint = (transfer) => {
     setSelectedTransfer(transfer);
     setOpenPrintModal(true);
@@ -497,6 +509,9 @@ const Inventory = () => {
           )}
           <IconButton size="small" color="primary" title="Print Challan" onClick={() => handleOpenPrint(row)}>
             <PrintIcon />
+          </IconButton>
+          <IconButton size="small" color="error" title="Delete Challan" onClick={() => handleDeleteTransfer(row.id)}>
+            <DeleteIcon />
           </IconButton>
         </Box>
       )

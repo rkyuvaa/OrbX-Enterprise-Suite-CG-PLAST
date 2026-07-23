@@ -1990,3 +1990,48 @@ class TxServices:
         except Exception:
             await db.rollback()
             raise HTTPException(status_code=400, detail="Failed to delete Invoice due to database constraints.")
+
+    @staticmethod
+    async def delete_stock_transfer(db: AsyncSession, transfer_id: UUID) -> None:
+        """Delete a stock transfer / delivery challan and reverse stock changes globally if it was dispatched."""
+        from app.models.inventory import StockTransferItem
+        from sqlalchemy import delete
+        q_transfer = await db.execute(
+            select(StockTransfer)
+            .filter(StockTransfer.id == transfer_id)
+            .options(selectinload(StockTransfer.items))
+        )
+        transfer = q_transfer.scalar_one_or_none()
+        if not transfer:
+            raise HTTPException(status_code=404, detail="Stock transfer not found.")
+
+        # Reverse stock changes globally if it was transferred / dispatched
+        if transfer.status == "Transferred":
+            # Reverse stock changes globally
+            q_stock = await db.execute(
+                select(StockTransaction).filter(
+                    StockTransaction.reference_type == "StockTransfer",
+                    StockTransaction.reference_id == transfer_id
+                )
+            )
+            stock_txs = q_stock.scalars().all()
+            for st in stock_txs:
+                await TxServices.update_stock(
+                    db=db,
+                    product_id=st.product_id,
+                    company_id=st.company_id,
+                    qty_change=-st.qty,
+                    tx_type="In" if st.qty < 0 else "Out",
+                    ref_type="StockTransfer Delete",
+                    ref_id=transfer_id,
+                    reason="Stock transfer deleted"
+                )
+                await db.delete(st)
+
+        try:
+            await db.execute(delete(StockTransferItem).filter(StockTransferItem.transfer_id == transfer_id))
+            await db.delete(transfer)
+            await db.commit()
+        except Exception:
+            await db.rollback()
+            raise HTTPException(status_code=400, detail="Failed to delete Stock Transfer due to database constraints.")
