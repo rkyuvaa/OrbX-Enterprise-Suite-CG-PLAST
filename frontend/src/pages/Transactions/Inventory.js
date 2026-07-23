@@ -909,7 +909,7 @@ const Inventory = () => {
                 </Typography>
                 <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>Company Code: <strong>{activePrintCompany?.code}</strong></Typography>
               </Box>
-              <Box sx={{ width: '48%', textAlign: 'right' }}>
+              <Box sx={{ width: '48%', textAlign: 'left' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>DELIVER TO (RECIPIENT):</Typography>
                   {selectedTransfer?.vehicle_no && (
