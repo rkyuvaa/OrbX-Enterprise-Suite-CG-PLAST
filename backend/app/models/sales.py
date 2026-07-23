@@ -69,6 +69,7 @@ class Invoice(Base):
     print_ready_layout: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     reference_note: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     reference_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    vehicle_no: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     # Relationships
     sales_order: Mapped[Optional["SalesOrder"]] = relationship(back_populates="invoices")

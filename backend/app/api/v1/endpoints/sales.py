@@ -203,6 +203,7 @@ async def email_invoice(
         "sales_order_number": invoice.sales_order.so_number if invoice.sales_order else None,
         "reference_note": invoice.reference_note,
         "reference_date": invoice.reference_date,
+        "vehicle_no": invoice.vehicle_no,
         # Company
         "company_name": company.name if company else "ORBX Corporation",
         "company_address": company.address if company else "",

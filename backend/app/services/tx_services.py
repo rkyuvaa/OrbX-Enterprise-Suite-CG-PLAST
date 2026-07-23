@@ -972,7 +972,8 @@ class TxServices:
             total_amount=so.grand_total,
             status="Unpaid",
             reference_note=inv_data.reference_note,
-            reference_date=inv_data.reference_date
+            reference_date=inv_data.reference_date,
+            vehicle_no=inv_data.vehicle_no
         )
         db.add(invoice)
         await db.flush()
@@ -1616,7 +1617,8 @@ class TxServices:
             tax_amount=0.0,
             discount_amount=0.0,
             grand_total=0.0,
-            gst_breakup={}
+            gst_breakup={},
+            vehicle_no=transfer_data.vehicle_no
         )
         if transfer_data.date:
             transfer.date = transfer_data.date

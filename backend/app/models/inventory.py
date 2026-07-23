@@ -49,6 +49,7 @@ class StockTransfer(Base):
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     status: Mapped[str] = mapped_column(String(30), default="Draft") # Draft, Transferred, Cancelled
     notes: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    vehicle_no: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     # Values & GST calculations
     total_amount: Mapped[float] = mapped_column(Float, default=0.0)

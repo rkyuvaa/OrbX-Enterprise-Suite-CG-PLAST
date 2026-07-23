@@ -267,6 +267,7 @@ class InvoiceCreate(BaseModel):
     due_date: Optional[datetime] = None
     reference_note: Optional[str] = None
     reference_date: Optional[datetime] = None
+    vehicle_no: Optional[str] = None
 
 
 class InvoiceOut(BaseModel):
@@ -295,6 +296,7 @@ class InvoiceOut(BaseModel):
     print_ready_layout: Optional[str] = None
     reference_note: Optional[str] = None
     reference_date: Optional[datetime] = None
+    vehicle_no: Optional[str] = None
     items: List[InvoiceItemOut] = []
 
     class Config:
@@ -467,6 +469,7 @@ class StockTransferCreate(BaseModel):
     customer_id: Optional[UUID] = None
     date: Optional[datetime] = None
     notes: Optional[str] = None
+    vehicle_no: Optional[str] = None
     items: List[StockTransferItemCreate]
 
 
@@ -496,6 +499,7 @@ class StockTransferOut(BaseModel):
     date: datetime
     status: str
     notes: Optional[str] = None
+    vehicle_no: Optional[str] = None
     total_amount: float
     tax_amount: float
     discount_amount: float

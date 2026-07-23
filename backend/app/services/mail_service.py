@@ -175,13 +175,17 @@ def generate_invoice_pdf(data: Dict[str, Any]) -> bytes:
                              spaceBefore=2 * mm, spaceAfter=3 * mm))
 
     # ── BILL TO / SHIP TO ──────────────────────────────────────────────────
-    def party_block(label: str, name: str, gstin: str, address: str) -> List:
-        return [
+    def party_block(label: str, name: str, gstin: str, address: str, vehicle_no: str = None) -> List:
+        block = [
             Paragraph(label, s_section_label),
             Paragraph(name or "", s_party_name),
             Paragraph((address or "").replace("\n", "<br/>"), s_party_detail),
-            Paragraph(f"GSTIN: <b>{gstin or 'N/A'}</b>", s_party_detail),
         ]
+        if gstin:
+            block.append(Paragraph(f"GSTIN: <b>{gstin}</b>", s_party_detail))
+        if vehicle_no:
+            block.append(Paragraph(f"Vehicle No: <b>{vehicle_no}</b>", s_party_detail))
+        return block
 
     bill_block = party_block(
         "BILL TO:",
@@ -194,6 +198,7 @@ def generate_invoice_pdf(data: Dict[str, Any]) -> bytes:
         data.get("customer_name", ""),
         "",
         data.get("customer_shipping_address", "") or data.get("customer_billing_address", ""),
+        vehicle_no=data.get("vehicle_no")
     )
 
     # Combine into a two-column layout

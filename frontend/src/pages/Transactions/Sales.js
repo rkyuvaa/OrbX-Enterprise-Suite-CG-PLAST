@@ -56,6 +56,8 @@ const Sales = () => {
   const [manualSoNumber, setManualSoNumber] = useState('');
   const [manualInvoiceNumber, setManualInvoiceNumber] = useState('');
   const [soItems, setSoItems] = useState([{ product_id: '', qty: 1, rate: 0, discount_amount: 0, tax_rate: 18 }]);
+  const [vehicleNo, setVehicleNo] = useState('');
+  const [directVehicleNo, setDirectVehicleNo] = useState('');
 
   // Quick Customer Create State
   const [openQuickCustomerModal, setOpenQuickCustomerModal] = useState(false);
@@ -182,6 +184,7 @@ const Sales = () => {
     setSoDate(new Date().toISOString().split('T')[0]);
     setSoItems([{ product_id: '', qty: 1, rate: 0, discount_amount: 0, tax_rate: 18 }]);
     setManualSoNumber(getNextSoNumber(defaultBranchId));
+    setDirectVehicleNo('');
     setOpenSOModal(true);
   };
 
@@ -195,6 +198,7 @@ const Sales = () => {
     setSoDate(new Date().toISOString().split('T')[0]);
     setSoItems([{ product_id: '', qty: 1, rate: 0, discount_amount: 0, tax_rate: 18 }]);
     setManualSoNumber('');
+    setDirectVehicleNo('');
     setOpenSOModal(true);
   };
 
@@ -222,6 +226,7 @@ const Sales = () => {
       }))
     );
     setManualSoNumber(so.so_number || '');
+    setDirectVehicleNo('');
     setOpenSOModal(true);
   };
 
@@ -379,7 +384,8 @@ const Sales = () => {
             date: soDate ? new Date(soDate).toISOString() : null,
             due_date: new Date(Date.now() + 15 * 86400000).toISOString(),
             reference_note: 'Direct Invoice',
-            reference_date: null
+            reference_date: null,
+            vehicle_no: directVehicleNo || null
           };
           await apiClient.post('/sales/invoices', invoicePayload);
         }
@@ -404,6 +410,7 @@ const Sales = () => {
     setReferenceNote('');
     setReferenceDate('');
     setManualInvoiceNumber(getNextInvoiceNumber(so.company_id));
+    setVehicleNo('');
     
     // Fetch transferred DCs for this customer
     apiClient.get(`/inventory/transfers?customer_id=${so.customer_id}`)
@@ -425,7 +432,8 @@ const Sales = () => {
         date: invoiceDate ? new Date(invoiceDate).toISOString() : null,
         due_date: new Date(Date.now() + 15 * 86400000).toISOString(),
         reference_note: referenceNote || null,
-        reference_date: referenceDate ? new Date(referenceDate).toISOString() : null
+        reference_date: referenceDate ? new Date(referenceDate).toISOString() : null,
+        vehicle_no: vehicleNo || null
       };
       await apiClient.post('/sales/invoices', payload);
       setOpenInvoiceModal(false);
@@ -892,7 +900,7 @@ const Sales = () => {
           </Box>
         }
       >
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '2fr 1fr 1fr' }, gap: 2, alignItems: 'flex-start', mb: 3 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: isDirectInvoice ? '2fr 1fr 1fr 1fr' : '2fr 1fr 1fr' }, gap: 2, alignItems: 'flex-start', mb: 3 }}>
           <Box>
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <FormAutocomplete
@@ -942,6 +950,18 @@ const Sales = () => {
               InputLabelProps={{ shrink: true }}
             />
           </Box>
+          {isDirectInvoice && (
+            <Box>
+              <TextField
+                label="Vehicle Number"
+                fullWidth
+                size="small"
+                value={directVehicleNo}
+                onChange={(e) => setDirectVehicleNo(e.target.value)}
+                placeholder="e.g. MH-12-AB-1234"
+              />
+            </Box>
+          )}
         </Box>
 
         <Typography variant="subtitle1" color="primary.main" sx={{ fontWeight: 600, mb: 1 }}>
@@ -1129,6 +1149,16 @@ const Sales = () => {
 
         <TextField
           fullWidth
+          size="small"
+          label="Vehicle Number"
+          value={vehicleNo}
+          onChange={(e) => setVehicleNo(e.target.value)}
+          placeholder="e.g. MH-12-AB-1234"
+          sx={{ mb: 3 }}
+        />
+
+        <TextField
+          fullWidth
           label="Reference Note"
           value={referenceNote}
           onChange={(e) => setReferenceNote(e.target.value)}
@@ -1281,6 +1311,11 @@ const Sales = () => {
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, fontSize: '0.9rem' }}>SHIP TO:</Typography>
               <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>{printData?.customer_name}</Typography>
               <Typography variant="body2" sx={{ whiteSpace: 'pre-line', fontSize: '0.85rem', color: 'text.secondary' }}>{printData?.customer_shipping_address}</Typography>
+              {printData?.vehicle_no && (
+                <Typography variant="body2" sx={{ fontSize: '0.85rem', mt: 0.5 }}>
+                  Vehicle No: <strong>{printData.vehicle_no}</strong>
+                </Typography>
+              )}
             </Box>
           </Box>
 

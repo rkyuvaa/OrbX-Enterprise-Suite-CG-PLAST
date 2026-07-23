@@ -131,6 +131,7 @@ const Inventory = () => {
   const [transferCustomerId, setTransferCustomerId] = useState('');
   const [transferDate, setTransferDate] = useState('');
   const [transferNotes, setTransferNotes] = useState('');
+  const [transferVehicleNo, setTransferVehicleNo] = useState('');
   const [transferItems, setTransferItems] = useState([{ product_id: '', qty: 1, rate: 0, discount_amount: 0, tax_rate: 18 }]);
 
   // Selected Transfer for printing
@@ -214,6 +215,7 @@ const Inventory = () => {
     setTransferCustomerId('');
     setTransferDate(new Date().toISOString().split('T')[0]);
     setTransferNotes('');
+    setTransferVehicleNo('');
     setTransferItems([{ product_id: products.length > 0 ? products[0].id : '', qty: 1, rate: 0, discount_amount: 0, tax_rate: 18 }]);
     setOpenTransferModal(true);
   };
@@ -253,6 +255,7 @@ const Inventory = () => {
         customer_id: transferCustomerId || null,
         date: transferDate ? new Date(transferDate).toISOString() : null,
         notes: transferNotes,
+        vehicle_no: transferVehicleNo || null,
         items: transferItems.map(i => ({
           product_id: i.product_id,
           qty: parseFloat(i.qty),
@@ -678,6 +681,14 @@ const Inventory = () => {
             onChange={(e) => setTransferNotes(e.target.value)}
           />
 
+          <TextField
+            fullWidth
+            label="Vehicle Number"
+            value={transferVehicleNo}
+            onChange={(e) => setTransferVehicleNo(e.target.value)}
+            placeholder="e.g. MH-12-AB-1234"
+          />
+
           <Divider />
           <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Line Items to Transfer</Typography>
 
@@ -913,6 +924,11 @@ const Inventory = () => {
                       </Box>
                     ) : null;
                   })()}
+                  {selectedTransfer?.vehicle_no && (
+                    <Typography variant="body2" sx={{ fontSize: '0.85rem', mt: 0.5 }}>
+                      Vehicle No: <strong>{selectedTransfer.vehicle_no}</strong>
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             </Box>
