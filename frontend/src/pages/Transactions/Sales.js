@@ -1308,14 +1308,16 @@ const Sales = () => {
               <Typography variant="body2" sx={{ fontSize: '0.9rem', mt: 0.5 }}>GSTIN: <strong>{printData?.customer_gstin}</strong></Typography>
             </Box>
             <Box sx={{ width: '48%' }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, fontSize: '0.9rem' }}>SHIP TO:</Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>SHIP TO:</Typography>
+                {printData?.vehicle_no && (
+                  <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                    Vehicle No: <strong>{printData.vehicle_no}</strong>
+                  </Typography>
+                )}
+              </Box>
               <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>{printData?.customer_name}</Typography>
               <Typography variant="body2" sx={{ whiteSpace: 'pre-line', fontSize: '0.85rem', color: 'text.secondary' }}>{printData?.customer_shipping_address}</Typography>
-              {printData?.vehicle_no && (
-                <Typography variant="body2" sx={{ fontSize: '0.85rem', mt: 0.5 }}>
-                  Vehicle No: <strong>{printData.vehicle_no}</strong>
-                </Typography>
-              )}
             </Box>
           </Box>
 

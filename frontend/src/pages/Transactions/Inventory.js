@@ -910,7 +910,14 @@ const Inventory = () => {
                 <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>Company Code: <strong>{activePrintCompany?.code}</strong></Typography>
               </Box>
               <Box sx={{ width: '48%', textAlign: 'right' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, fontSize: '0.9rem' }}>DELIVER TO (RECIPIENT):</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>DELIVER TO (RECIPIENT):</Typography>
+                  {selectedTransfer?.vehicle_no && (
+                    <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                      Vehicle No: <strong>{selectedTransfer.vehicle_no}</strong>
+                    </Typography>
+                  )}
+                </Box>
                 <Box>
                   <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>{selectedTransfer?.customer_name}</Typography>
                   {(() => {
@@ -922,11 +929,6 @@ const Inventory = () => {
                       </Box>
                     ) : null;
                   })()}
-                  {selectedTransfer?.vehicle_no && (
-                    <Typography variant="body2" sx={{ fontSize: '0.85rem', mt: 0.5 }}>
-                      Vehicle No: <strong>{selectedTransfer.vehicle_no}</strong>
-                    </Typography>
-                  )}
                 </Box>
               </Box>
             </Box>
