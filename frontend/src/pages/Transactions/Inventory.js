@@ -907,7 +907,7 @@ const Inventory = () => {
                   Date: <strong>{selectedTransfer ? new Date(selectedTransfer.date).toLocaleDateString() : ''}</strong>
                 </Typography>
                 <Typography variant="body2" sx={{ fontSize: '0.85rem', color: '#475569', mt: 0.5 }}>
-                  Status: <strong>{selectedTransfer?.status}</strong>
+                  Vehicle No: <strong>{selectedTransfer?.vehicle_no || 'N/A'}</strong>
                 </Typography>
               </Box>
             </Box>

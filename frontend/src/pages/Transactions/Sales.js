@@ -1294,6 +1294,9 @@ const Sales = () => {
               <Typography variant="body2" sx={{ fontSize: '0.85rem', color: '#475569', mt: 0.5 }}>
                 Date: <strong>{printData ? formatBillingDate(printData.date) : ''}</strong>
               </Typography>
+              <Typography variant="body2" sx={{ fontSize: '0.85rem', color: '#475569', mt: 0.5 }}>
+                Vehicle No: <strong>{printData?.vehicle_no || 'N/A'}</strong>
+              </Typography>
             </Box>
           </Box>
 
