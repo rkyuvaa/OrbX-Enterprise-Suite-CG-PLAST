@@ -665,29 +665,27 @@ const Inventory = () => {
             </Grid>
           </Grid>
 
-          <TextField
-            type="date"
-            fullWidth
-            label="Challan Date"
-            value={transferDate}
-            onChange={(e) => setTransferDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <TextField
-            fullWidth
-            label="Internal Auditing Remarks"
-            value={transferNotes}
-            onChange={(e) => setTransferNotes(e.target.value)}
-          />
-
-          <TextField
-            fullWidth
-            label="Vehicle Number"
-            value={transferVehicleNo}
-            onChange={(e) => setTransferVehicleNo(e.target.value)}
-            placeholder="e.g. MH-12-AB-1234"
-          />
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                type="date"
+                fullWidth
+                label="Challan Date"
+                value={transferDate}
+                onChange={(e) => setTransferDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Vehicle Number"
+                value={transferVehicleNo}
+                onChange={(e) => setTransferVehicleNo(e.target.value)}
+                placeholder="e.g. MH-12-AB-1234"
+              />
+            </Grid>
+          </Grid>
 
           <Divider />
           <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Line Items to Transfer</Typography>
