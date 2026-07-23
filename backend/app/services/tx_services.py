@@ -929,9 +929,14 @@ class TxServices:
         expected_invoice_no = f"{company.invoice_prefix}{company.invoice_next_number:05d}{company.invoice_suffix}"
         if not inv_data.invoice_number or inv_data.invoice_number == expected_invoice_no:
             invoice_seq = company.invoice_next_number
-            company.invoice_next_number += 1
+            while True:
+                invoice_no = f"{company.invoice_prefix}{invoice_seq:05d}{company.invoice_suffix}"
+                q_exists = await db.execute(select(Invoice).filter(Invoice.invoice_number == invoice_no))
+                if not q_exists.scalar_one_or_none():
+                    break
+                invoice_seq += 1
+            company.invoice_next_number = invoice_seq + 1
             db.add(company)
-            invoice_no = expected_invoice_no
         else:
             invoice_no = inv_data.invoice_number
 
@@ -1602,10 +1607,15 @@ class TxServices:
             raise HTTPException(status_code=400, detail="Company not found.")
             
         challan_seq = company.challan_next_number
-        company.challan_next_number += 1
-        db.add(company)
+        while True:
+            challan_no = f"{company.challan_prefix}{challan_seq:05d}{company.challan_suffix}"
+            q_exists = await db.execute(select(StockTransfer).filter(StockTransfer.challan_number == challan_no))
+            if not q_exists.scalar_one_or_none():
+                break
+            challan_seq += 1
         
-        challan_no = f"{company.challan_prefix}{challan_seq:05d}{company.challan_suffix}"
+        company.challan_next_number = challan_seq + 1
+        db.add(company)
         
         transfer = StockTransfer(
             company_id=transfer_data.company_id,
