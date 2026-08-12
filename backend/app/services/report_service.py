@@ -1903,18 +1903,19 @@ class ReportService:
         """Generate My Ledger statement with per-row custom additional amounts and dynamic balance calculation."""
         p_type = (party_type or "CUSTOMER").upper()
 
-        # 1. Fetch stored adjustments for this party
+        # 1. Fetch stored adjustments for this party using a SAVEPOINT
         adj_map = {}
         try:
             from app.models.my_ledger import MyLedgerAdjustment
-            q_adj = await db.execute(
-                select(MyLedgerAdjustment).filter(
-                    MyLedgerAdjustment.party_type == p_type,
-                    MyLedgerAdjustment.party_id == party_id
+            async with db.begin_nested():
+                q_adj = await db.execute(
+                    select(MyLedgerAdjustment).filter(
+                        MyLedgerAdjustment.party_type == p_type,
+                        MyLedgerAdjustment.party_id == party_id
+                    )
                 )
-            )
-            adjustments_list = q_adj.scalars().all()
-            adj_map = {a.tx_key: {"additional_amount": a.additional_amount, "notes": a.notes} for a in adjustments_list}
+                adjustments_list = q_adj.scalars().all()
+                adj_map = {a.tx_key: {"additional_amount": a.additional_amount, "notes": a.notes} for a in adjustments_list}
         except Exception:
             adj_map = {}
 
