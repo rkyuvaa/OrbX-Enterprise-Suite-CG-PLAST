@@ -18,6 +18,11 @@ class PurchaseOrder(Base):
     date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     expected_delivery: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String(30), default="Draft") # Draft, Confirmed, Received, Cancelled
+
+    # Customer bill / reference fields
+    cust_bill_date: Mapped[Optional[date]] = mapped_column(Date(), nullable=True)
+    cust_bill_no: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    ref: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     
     total_amount: Mapped[float] = mapped_column(Float, default=0.0)
     tax_amount: Mapped[float] = mapped_column(Float, default=0.0)

@@ -91,6 +91,9 @@ class TxServices:
             company_id=po_data.company_id,
             po_number=po_no,
             expected_delivery=po_data.expected_delivery,
+            cust_bill_date=po_data.cust_bill_date,
+            cust_bill_no=po_data.cust_bill_no,
+            ref=po_data.ref,
             status="Draft",
             total_amount=0.0,
             tax_amount=0.0,
@@ -184,6 +187,9 @@ class TxServices:
         po.supplier_id = po_data.supplier_id
         po.company_id = po_data.company_id
         po.expected_delivery = po_data.expected_delivery
+        po.cust_bill_date = po_data.cust_bill_date
+        po.cust_bill_no = po_data.cust_bill_no
+        po.ref = po_data.ref
 
         from sqlalchemy import delete
         await db.execute(delete(PurchaseOrderItem).filter(PurchaseOrderItem.purchase_order_id == po_id))

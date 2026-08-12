@@ -33,6 +33,9 @@ const Purchase = () => {
   const [poBranchId, setPoBranchId] = useState('');
   const [poDate, setPoDate] = useState('');
   const [poItems, setPoItems] = useState([{ product_id: '', qty: 1, rate: 0, tax_rate: 18 }]);
+  const [poCustBillDate, setPoCustBillDate] = useState('');
+  const [poCustBillNo, setPoCustBillNo] = useState('');
+  const [poRef, setPoRef] = useState('');
 
   // Quick Supplier Create State
   const [openQuickSupplierModal, setOpenQuickSupplierModal] = useState(false);
@@ -333,6 +336,9 @@ const Purchase = () => {
     setPoBranchId(activeBranchId || (branches.length > 0 ? branches[0].id : ''));
     setPoDate(new Date().toISOString().split('T')[0]);
     setPoItems([{ product_id: '', qty: 1, rate: 0, tax_rate: 18 }]);
+    setPoCustBillDate('');
+    setPoCustBillNo('');
+    setPoRef('');
     setOpenPOModal(true);
   };
 
@@ -355,6 +361,9 @@ const Purchase = () => {
         sku: item.sku
       }))
     );
+    setPoCustBillDate(po.cust_bill_date ? po.cust_bill_date.split('T')[0] : '');
+    setPoCustBillNo(po.cust_bill_no || '');
+    setPoRef(po.ref || '');
     setOpenPOModal(true);
   };
 
@@ -488,6 +497,9 @@ const Purchase = () => {
         supplier_id: poSupplierId,
         company_id: poBranchId,
         date: poDate ? new Date(poDate).toISOString() : null,
+        cust_bill_date: poCustBillDate || null,
+        cust_bill_no: poCustBillNo || null,
+        ref: poRef || null,
         items: poItems.map(item => ({
           product_id: item.product_id,
           qty: item.qty,
@@ -966,6 +978,35 @@ const Purchase = () => {
           Add Item Row
         </Button>
 
+        {/* Customer Bill Date / Bill No / Ref */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 2, mb: 3 }}>
+          <TextField
+            type="date"
+            label="Customer Bill Date"
+            size="small"
+            fullWidth
+            value={poCustBillDate}
+            onChange={(e) => setPoCustBillDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Customer Bill No"
+            size="small"
+            fullWidth
+            value={poCustBillNo}
+            onChange={(e) => setPoCustBillNo(e.target.value)}
+            placeholder="e.g. CB-00123"
+          />
+          <TextField
+            label="Ref"
+            size="small"
+            fullWidth
+            value={poRef}
+            onChange={(e) => setPoRef(e.target.value)}
+            placeholder="Reference / Remarks"
+          />
+        </Box>
+
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1, borderTop: '1px solid #e2e8f0', pt: 2 }}>
           <Typography variant="body2">Subtotal: <strong>₹{poTotalAmountSum.toFixed(2)}</strong></Typography>
           <Typography variant="body2">Taxes (GST): <strong>₹{poTotalTaxSum.toFixed(2)}</strong></Typography>
@@ -1237,6 +1278,21 @@ const Purchase = () => {
             {/* Summary / Totals */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
               <Box sx={{ width: '50%' }}>
+                {/* Customer Bill Info */}
+                {(selectedPO?.cust_bill_date || selectedPO?.cust_bill_no || selectedPO?.ref) && (
+                  <Box sx={{ mb: 2, borderTop: '1px solid #e2e8f0', pt: 1.5 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, fontSize: '0.85rem' }}>
+                      Cust. Bill Date&nbsp;&nbsp;&nbsp;Cust. Bill No&nbsp;&nbsp;&nbsp;Ref
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.82rem', color: '#1e293b' }}>
+                      {selectedPO?.cust_bill_date ? formatBillingDate(selectedPO.cust_bill_date) : '—'}
+                      &nbsp;&nbsp;&nbsp;&nbsp;
+                      {selectedPO?.cust_bill_no || '—'}
+                      &nbsp;&nbsp;&nbsp;&nbsp;
+                      {selectedPO?.ref || '—'}
+                    </Typography>
+                  </Box>
+                )}
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, fontSize: '0.85rem' }}>Instructions / Terms:</Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'pre-line', fontSize: '0.75rem', display: 'block', lineHeight: 1.3, mb: 2 }}>
                   {printBranch?.invoice_terms || "1. Goods should be as per specification.\n2. Verify quality before delivery.\n3. Send copy of invoice with delivery."}
