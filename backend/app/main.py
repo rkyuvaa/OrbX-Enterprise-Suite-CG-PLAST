@@ -31,13 +31,16 @@ async def lifespan(app: FastAPI):
                 company_id UUID,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                is_active BOOLEAN DEFAULT TRUE,
                 CONSTRAINT uq_my_ledger_party_tx_key UNIQUE (party_type, party_id, tx_key)
             )
             """))
+            await db.execute(text("ALTER TABLE my_ledger_adjustments ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE"))
             await db.execute(text("CREATE INDEX IF NOT EXISTS ix_my_ledger_adjustments_party_type ON my_ledger_adjustments(party_type)"))
             await db.execute(text("CREATE INDEX IF NOT EXISTS ix_my_ledger_adjustments_party_id ON my_ledger_adjustments(party_id)"))
             await db.execute(text("CREATE INDEX IF NOT EXISTS ix_my_ledger_adjustments_tx_key ON my_ledger_adjustments(tx_key)"))
             await db.execute(text("CREATE INDEX IF NOT EXISTS ix_my_ledger_adjustments_company_id ON my_ledger_adjustments(company_id)"))
+            await db.execute(text("CREATE INDEX IF NOT EXISTS ix_my_ledger_adjustments_is_active ON my_ledger_adjustments(is_active)"))
             await db.commit()
         except Exception as e:
             print(f"Error auto-creating my_ledger_adjustments: {e}")

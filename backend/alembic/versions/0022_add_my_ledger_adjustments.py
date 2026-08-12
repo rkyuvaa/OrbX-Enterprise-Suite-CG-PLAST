@@ -31,6 +31,7 @@ def upgrade() -> None:
         sa.Column('company_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('companies.id', ondelete='CASCADE'), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('party_type', 'party_id', 'tx_key', name='uq_my_ledger_party_tx_key')
     )
@@ -38,6 +39,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_my_ledger_adjustments_party_id'), 'my_ledger_adjustments', ['party_id'], unique=False)
     op.create_index(op.f('ix_my_ledger_adjustments_tx_key'), 'my_ledger_adjustments', ['tx_key'], unique=False)
     op.create_index(op.f('ix_my_ledger_adjustments_company_id'), 'my_ledger_adjustments', ['company_id'], unique=False)
+    op.create_index(op.f('ix_my_ledger_adjustments_is_active'), 'my_ledger_adjustments', ['is_active'], unique=False)
 
 
 def downgrade() -> None:
