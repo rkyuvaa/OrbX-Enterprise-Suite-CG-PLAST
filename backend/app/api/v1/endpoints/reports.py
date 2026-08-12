@@ -2,7 +2,7 @@ from typing import Optional, List, Dict, Any
 from uuid import UUID
 from datetime import date
 from decimal import Decimal
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import deps
