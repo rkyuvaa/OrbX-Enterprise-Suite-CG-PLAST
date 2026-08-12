@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date as PyDate
 from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
@@ -20,7 +20,7 @@ class PurchaseOrder(Base):
     status: Mapped[str] = mapped_column(String(30), default="Draft") # Draft, Confirmed, Received, Cancelled
 
     # Customer bill / reference fields
-    cust_bill_date: Mapped[Optional[date]] = mapped_column(Date(), nullable=True)
+    cust_bill_date: Mapped[Optional[PyDate]] = mapped_column(Date(), nullable=True)
     cust_bill_no: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     ref: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     
