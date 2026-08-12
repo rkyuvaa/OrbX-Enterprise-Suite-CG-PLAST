@@ -4,7 +4,9 @@ FROM node:18-alpine AS build-stage
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --prefer-offline --no-audit
+# Use npm ci and cache mount to keep npm cache on host across builds
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline --no-audit --progress=false
 
 COPY . .
 ENV NODE_OPTIONS="--max-old-space-size=4096"
