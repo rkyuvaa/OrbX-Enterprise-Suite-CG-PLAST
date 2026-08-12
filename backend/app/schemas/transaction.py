@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from uuid import UUID
 from pydantic import BaseModel, EmailStr
 
@@ -42,10 +42,10 @@ class PurchaseOrderItemOut(BaseModel):
 
 class PurchaseOrderCreate(BaseModel):
     supplier_id: UUID
-    company_id: UUID
+    company_id: Optional[UUID] = None
     date: Optional[datetime] = None
     expected_delivery: Optional[datetime] = None
-    cust_bill_date: Optional[date] = None
+    cust_bill_date: Optional[Union[date, str]] = None
     cust_bill_no: Optional[str] = None
     ref: Optional[str] = None
     items: List[PurchaseOrderItemCreate]
@@ -55,12 +55,12 @@ class PurchaseOrderOut(BaseModel):
     id: UUID
     supplier_id: UUID
     supplier_name: Optional[str] = None
-    company_id: UUID
+    company_id: Optional[UUID] = None
     po_number: Optional[str] = None
     date: datetime
     expected_delivery: Optional[datetime] = None
     status: str
-    cust_bill_date: Optional[date] = None
+    cust_bill_date: Optional[Union[date, str]] = None
     cust_bill_no: Optional[str] = None
     ref: Optional[str] = None
     total_amount: float

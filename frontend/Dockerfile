@@ -4,10 +4,10 @@ FROM node:18-alpine AS build-stage
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --silent
+RUN npm install --prefer-offline --no-audit
 
 COPY . .
-RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build
+RUN npm run build
 
 # Stage 2: Production Nginx Server
 FROM nginx:alpine

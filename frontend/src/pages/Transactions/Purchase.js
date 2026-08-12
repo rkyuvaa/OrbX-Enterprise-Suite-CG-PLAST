@@ -25,6 +25,28 @@ const getErrorMessage = (err, fallbackMessage) => {
   return String(detail);
 };
 
+const parseISODate = (val) => {
+  if (!val) return null;
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!trimmed) return null;
+    if (/^\d{2}-\d{2}-\d{4}$/.test(trimmed)) {
+      const [d, m, y] = trimmed.split('-');
+      return `${y}-${m}-${d}`;
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+  }
+  try {
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split('T')[0];
+    }
+  } catch (e) {}
+  return null;
+};
+
 const Purchase = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [pos, setPos] = useState([]);
@@ -51,6 +73,7 @@ const Purchase = () => {
   const [poCustBillDate, setPoCustBillDate] = useState('');
   const [poCustBillNo, setPoCustBillNo] = useState('');
   const [poRef, setPoRef] = useState('');
+  const [poModalError, setPoModalError] = useState(null);
 
   // Quick Supplier Create State
   const [openQuickSupplierModal, setOpenQuickSupplierModal] = useState(false);
@@ -354,6 +377,7 @@ const Purchase = () => {
     setPoCustBillDate('');
     setPoCustBillNo('');
     setPoRef('');
+    setPoModalError(null);
     setOpenPOModal(true);
   };
 
@@ -376,9 +400,10 @@ const Purchase = () => {
         sku: item.sku
       }))
     );
-    setPoCustBillDate(po.cust_bill_date ? po.cust_bill_date.split('T')[0] : '');
+    setPoCustBillDate(po.cust_bill_date ? parseISODate(po.cust_bill_date) || '' : '');
     setPoCustBillNo(po.cust_bill_no || '');
     setPoRef(po.ref || '');
+    setPoModalError(null);
     setOpenPOModal(true);
   };
 
@@ -507,33 +532,43 @@ const Purchase = () => {
   };
 
   const submitPO = async () => {
+    setPoModalError(null);
     if (!poSupplierId) {
-      setError('Please select a supplier.');
+      const msg = 'Please select a supplier.';
+      setPoModalError(msg);
+      setError(msg);
       return;
     }
     const finalBranchId = poBranchId || activeBranchId || (branches.length > 0 ? branches[0].id : null);
     if (!finalBranchId) {
-      setError('Please select a valid company.');
+      const msg = 'Please select a valid company.';
+      setPoModalError(msg);
+      setError(msg);
       return;
     }
     if (!poItems || poItems.length === 0 || poItems.some((it) => !it.product_id)) {
-      setError('Please select valid products for all line items.');
+      const msg = 'Please select valid products for all line items.';
+      setPoModalError(msg);
+      setError(msg);
       return;
     }
+
+    const formattedPoDate = parseISODate(poDate);
+    const formattedCustBillDate = parseISODate(poCustBillDate);
 
     try {
       const payload = {
         supplier_id: poSupplierId,
         company_id: finalBranchId,
-        date: poDate ? new Date(poDate).toISOString() : null,
-        cust_bill_date: (poCustBillDate && poCustBillDate.trim()) ? poCustBillDate.trim() : null,
+        date: formattedPoDate ? new Date(formattedPoDate).toISOString() : new Date().toISOString(),
+        cust_bill_date: formattedCustBillDate,
         cust_bill_no: (poCustBillNo && poCustBillNo.trim()) ? poCustBillNo.trim() : null,
         ref: (poRef && poRef.trim()) ? poRef.trim() : null,
         items: poItems.map(item => ({
           product_id: item.product_id,
-          qty: item.qty,
-          rate: item.rate,
-          tax_rate: item.tax_rate
+          qty: parseFloat(item.qty) || 1,
+          rate: parseFloat(item.rate) || 0,
+          tax_rate: parseFloat(item.tax_rate) || 18
         }))
       };
       if (selectedPO) {
@@ -544,7 +579,9 @@ const Purchase = () => {
       setOpenPOModal(false);
       loadData();
     } catch (err) {
-      setError(getErrorMessage(err, 'Failed to submit Purchase Order.'));
+      const msg = getErrorMessage(err, 'Failed to submit Purchase Order.');
+      setPoModalError(msg);
+      setError(msg);
     }
   };
 
@@ -864,6 +901,11 @@ const Purchase = () => {
           </Box>
         }
       >
+        {poModalError && (
+          <Alert severity="error" onClose={() => setPoModalError(null)} sx={{ mb: 2, borderRadius: '8px' }}>
+            {poModalError}
+          </Alert>
+        )}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '2fr 1fr' }, gap: 2, alignItems: 'flex-start', mb: 3 }}>
           <Box>
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
