@@ -21,6 +21,12 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    sourcemap: false,
+    chunkSizeWarningLimit: 2000,
+    target: 'es2015',
+    minify: 'esbuild',
+  },
   server: {
     port: 3000,
     host: true,

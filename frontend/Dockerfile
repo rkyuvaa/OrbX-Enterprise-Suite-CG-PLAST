@@ -7,6 +7,7 @@ COPY package*.json ./
 RUN npm install --prefer-offline --no-audit
 
 COPY . .
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
 # Stage 2: Production Nginx Server

@@ -12,9 +12,9 @@ RUN apt-get update \
         libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install python dependencies
+# Copy and install python dependencies with binary wheel preference
 COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
 
 # Copy backend codebase
 COPY . /app
