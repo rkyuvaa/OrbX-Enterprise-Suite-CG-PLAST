@@ -16,7 +16,9 @@ import {
   CheckCircle as PaidIcon,
   AddCard as AdditionalIcon,
   Person as CustomerIcon,
-  LocalShipping as SupplierIcon
+  LocalShipping as SupplierIcon,
+  Save as SaveIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 
 import apiClient from '../../api/client';
@@ -38,6 +40,7 @@ const MyLedger = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [savingKey, setSavingKey] = useState(null);
+  const [modifiedKeys, setModifiedKeys] = useState({});
 
   const printRef = useRef();
 
@@ -47,6 +50,7 @@ const MyLedger = () => {
       setSelectedParty(null);
       setLedgerData(null);
       setTransactions([]);
+      setModifiedKeys({});
       if (partyType === 'CUSTOMER') {
         const res = await apiClient.get('/customers/');
         setParties(res.data.filter(c => c.is_active !== false));
@@ -121,6 +125,7 @@ const MyLedger = () => {
       const res = await apiClient.get(url);
       setLedgerData(res.data);
       setTransactions(res.data.transactions || []);
+      setModifiedKeys({});
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load My Ledger report.');
       setLedgerData(null);
@@ -141,13 +146,14 @@ const MyLedger = () => {
 
   // Handle local change in Additional Amount
   const handleAdditionalAmountChange = (txKey, value) => {
-    const numericVal = parseFloat(value) || 0.0;
-
+    setModifiedKeys((prev) => ({ ...prev, [txKey]: true }));
     setTransactions((prevTx) => {
       const newTxList = prevTx.map((item) => {
         if (item.tx_key === txKey) {
           return { ...item, additional_amount: value }; // Keep string in input for easy editing
         }
+        return item;
+      });
         return item;
       });
 
@@ -165,7 +171,7 @@ const MyLedger = () => {
     });
   };
 
-  // Persist additional amount to backend on blur / save
+  // Persist additional amount to backend on save button click
   const handleSaveAdditionalAmount = async (tx) => {
     if (!selectedParty) return;
     const addAmt = parseFloat(tx.additional_amount) || 0.0;
@@ -180,8 +186,13 @@ const MyLedger = () => {
         additional_amount: addAmt,
         company_id: activeBranchId || null
       });
+      setModifiedKeys((prev) => {
+        const next = { ...prev };
+        delete next[tx.tx_key];
+        return next;
+      });
     } catch (err) {
-      setError('Failed to auto-save additional amount change.');
+      setError('Failed to save additional amount change.');
     } finally {
       setSavingKey(null);
     }
@@ -242,10 +253,9 @@ const MyLedger = () => {
             size="small"
             value={row.additional_amount !== undefined ? row.additional_amount : 0}
             onChange={(e) => handleAdditionalAmountChange(row.tx_key, e.target.value)}
-            onBlur={() => handleSaveAdditionalAmount(row)}
             placeholder="0.00"
             sx={{
-              width: 120,
+              width: 100,
               '& .MuiInputBase-input': {
                 py: 0.5,
                 px: 1,
@@ -255,7 +265,32 @@ const MyLedger = () => {
               }
             }}
           />
-          {savingKey === row.tx_key && <CircularProgress size={16} />}
+          {savingKey === row.tx_key ? (
+            <CircularProgress size={16} />
+          ) : modifiedKeys[row.tx_key] ? (
+            <Button
+              variant="contained"
+              color="success"
+              size="small"
+              onClick={() => handleSaveAdditionalAmount(row)}
+              startIcon={<SaveIcon sx={{ fontSize: '0.85rem !important' }} />}
+              sx={{
+                py: 0.25,
+                px: 1,
+                minWidth: '55px',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                textTransform: 'none',
+                borderRadius: '4px',
+                backgroundColor: '#10b981',
+                '&:hover': { backgroundColor: '#059669' }
+              }}
+            >
+              Save
+            </Button>
+          ) : (
+            <CheckCircleIcon sx={{ color: '#10b981', fontSize: 18 }} titleAccess="Saved successfully" />
+          )}
         </Box>
       )
     },
