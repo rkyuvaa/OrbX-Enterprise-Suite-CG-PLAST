@@ -29,7 +29,8 @@ import {
   History as HistoryIcon,
   Backup as BackupIcon,
   People as CustomerIcon,
-  LocalShipping as VendorIcon
+  LocalShipping as VendorIcon,
+  MenuBook as BookIcon
 } from '@mui/icons-material';
 
 import { logoutUser, fetchUserProfile } from '../app/slices/authSlice';
@@ -202,6 +203,9 @@ const AppLayout = () => {
     if (p.startsWith('/reports/dashboard')) {
       return { title: 'Reports Dashboard', breadcrumbs: 'Dashboard > Reports Dashboard' };
     }
+    if (p.startsWith('/reports/my-ledger')) {
+      return { title: 'My Ledger Report', breadcrumbs: 'Dashboard > Reports > My Ledger' };
+    }
     if (p.startsWith('/reports/sales-summary')) {
       return { title: 'Excel Sales Summary', breadcrumbs: 'Dashboard > Excel Sales Summary' };
     }
@@ -295,6 +299,7 @@ const AppLayout = () => {
         { label: 'Purchase Reports', to: '/reports/purchase', icon: <PurchaseIcon /> },
         { label: 'Customer Ledger', to: '/transactions/customer-ledger', icon: <ReceiveIcon /> },
         { label: 'Vendor Ledger', to: '/transactions/supplier-ledger', icon: <PayIcon /> },
+        { label: 'My Ledger', to: '/reports/my-ledger', icon: <BookIcon /> },
         { label: 'Excel Sales Summary', to: '/reports/sales-summary', icon: <HistoryIcon /> }
       ]
     },

@@ -24,6 +24,12 @@ from app.schemas.accounts import (
     PurchaseRegisterResponse,
     SalesRegisterResponse
 )
+from app.schemas.my_ledger import (
+    MyLedgerResponse,
+    MyLedgerEntry,
+    MyLedgerAdjustmentCreate,
+    MyLedgerAdjustmentOut
+)
 
 
 class ReportService:
@@ -1884,4 +1890,283 @@ class ReportService:
             "limit": limit,
             "records": records
         }
+
+    @staticmethod
+    async def get_my_ledger(
+        db: AsyncSession,
+        party_type: str,
+        party_id: UUID,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        company_id: Optional[UUID] = None
+    ) -> MyLedgerResponse:
+        """Generate My Ledger statement with per-row custom additional amounts and dynamic balance calculation."""
+        p_type = (party_type or "CUSTOMER").upper()
+
+        # 1. Fetch stored adjustments for this party
+        from app.models.my_ledger import MyLedgerAdjustment
+        q_adj = await db.execute(
+            select(MyLedgerAdjustment).filter(
+                MyLedgerAdjustment.party_type == p_type,
+                MyLedgerAdjustment.party_id == party_id
+            )
+        )
+        adjustments_list = q_adj.scalars().all()
+        adj_map = {a.tx_key: {"additional_amount": a.additional_amount, "notes": a.notes} for a in adjustments_list}
+
+        # 2. Parse start and end dates
+        start_dt = None
+        end_dt = None
+        if start_date:
+            try:
+                if len(start_date) == 7:
+                    start_dt = datetime.strptime(start_date, "%Y-%m")
+                else:
+                    start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            except Exception:
+                pass
+        if end_date:
+            try:
+                if len(end_date) == 7:
+                    year, month = map(int, end_date.split("-"))
+                    if month == 12:
+                        end_dt = datetime(year + 1, 1, 1) - timedelta(seconds=1)
+                    else:
+                        end_dt = datetime(year, month + 1, 1) - timedelta(seconds=1)
+                else:
+                    end_dt = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1) - timedelta(seconds=1)
+            except Exception:
+                pass
+
+        entries = []
+        party_name = "Unknown"
+        opening_bal = 0.0
+        opening_bal_type = "Dr"
+
+        if p_type == "CUSTOMER":
+            q_cust = await db.execute(select(Customer).filter(Customer.id == party_id))
+            cust = q_cust.scalar_one_or_none()
+            if cust:
+                party_name = cust.name
+                opening_bal = float(cust.opening_bal or 0.0)
+                opening_bal_type = cust.opening_bal_type or "Dr"
+
+            # Invoices
+            stmt_inv = select(Invoice).join(SalesOrder, Invoice.sales_order_id == SalesOrder.id).filter(
+                SalesOrder.customer_id == party_id, Invoice.status != "Cancelled"
+            )
+            if company_id:
+                stmt_inv = stmt_inv.filter(Invoice.company_id == company_id)
+            if start_dt:
+                stmt_inv = stmt_inv.filter(Invoice.date >= start_dt)
+            if end_dt:
+                stmt_inv = stmt_inv.filter(Invoice.date <= end_dt)
+            q_inv = await db.execute(stmt_inv.order_by(Invoice.date.asc()))
+            invoices = q_inv.scalars().all()
+
+            for inv in invoices:
+                entries.append({
+                    "tx_key": f"inv_{inv.id}",
+                    "date": inv.date,
+                    "tx_type": "Invoice",
+                    "reference_no": inv.invoice_number or "N/A",
+                    "debit": float(inv.total_amount or 0.0),
+                    "credit": 0.0
+                })
+
+            # Customer Payments
+            stmt_pay = select(Payment).filter(Payment.customer_id == party_id)
+            if company_id:
+                stmt_pay = stmt_pay.join(Invoice, Payment.invoice_id == Invoice.id, isouter=True).filter(
+                    (Invoice.company_id == company_id) | (Payment.invoice_id == None)
+                )
+            if start_dt:
+                stmt_pay = stmt_pay.filter(Payment.payment_date >= start_dt)
+            if end_dt:
+                stmt_pay = stmt_pay.filter(Payment.payment_date <= end_dt)
+            q_pay = await db.execute(stmt_pay.order_by(Payment.payment_date.asc()))
+            payments = q_pay.scalars().all()
+
+            for pay in payments:
+                entries.append({
+                    "tx_key": f"pay_{pay.id}",
+                    "date": pay.payment_date,
+                    "tx_type": "Customer Payment",
+                    "reference_no": pay.reference_number or "N/A",
+                    "debit": 0.0,
+                    "credit": float(pay.amount_paid or 0.0)
+                })
+
+        else: # SUPPLIER / VENDOR
+            q_supp = await db.execute(select(Supplier).filter(Supplier.id == party_id))
+            supp = q_supp.scalar_one_or_none()
+            if supp:
+                party_name = supp.name
+                opening_bal = float(supp.opening_bal or 0.0)
+                opening_bal_type = supp.opening_bal_type or "Cr"
+
+            # Purchase Bills
+            stmt_bills = select(PurchaseEntry).filter(PurchaseEntry.supplier_id == party_id, PurchaseEntry.status != "Cancelled")
+            if company_id:
+                stmt_bills = stmt_bills.filter(PurchaseEntry.company_id == company_id)
+            if start_dt:
+                stmt_bills = stmt_bills.filter(PurchaseEntry.billing_date >= start_dt)
+            if end_dt:
+                stmt_bills = stmt_bills.filter(PurchaseEntry.billing_date <= end_dt)
+            q_bills = await db.execute(stmt_bills.order_by(PurchaseEntry.billing_date.asc()))
+            bills = q_bills.scalars().all()
+
+            for bill in bills:
+                entries.append({
+                    "tx_key": f"bill_{bill.id}",
+                    "date": bill.billing_date,
+                    "tx_type": "Purchase Bill",
+                    "reference_no": bill.invoice_number or "N/A",
+                    "debit": float(bill.total_amount or 0.0),
+                    "credit": 0.0
+                })
+
+            # Vendor Payments
+            stmt_vpay = select(VendorPayment).filter(VendorPayment.supplier_id == party_id).options(selectinload(VendorPayment.purchase_entry))
+            if company_id:
+                stmt_vpay = stmt_vpay.join(PurchaseEntry, VendorPayment.purchase_entry_id == PurchaseEntry.id, isouter=True).filter(
+                    (PurchaseEntry.company_id == company_id) | (VendorPayment.purchase_entry_id == None)
+                )
+            if start_dt:
+                stmt_vpay = stmt_vpay.filter(VendorPayment.payment_date >= start_dt)
+            if end_dt:
+                stmt_vpay = stmt_vpay.filter(VendorPayment.payment_date <= end_dt)
+            q_vpay = await db.execute(stmt_vpay.order_by(VendorPayment.payment_date.asc()))
+            vpayments = q_vpay.scalars().all()
+
+            for vpay in vpayments:
+                ref_no = vpay.reference_number
+                if not ref_no or ref_no == "-":
+                    ref_no = vpay.purchase_entry.invoice_number if vpay.purchase_entry else "Advance Payment"
+                entries.append({
+                    "tx_key": f"vpay_{vpay.id}",
+                    "date": vpay.payment_date,
+                    "tx_type": "Vendor Payment",
+                    "reference_no": ref_no,
+                    "debit": 0.0,
+                    "credit": float(vpay.amount_paid or 0.0)
+                })
+
+        # Sort chronologically by date
+        entries.sort(key=lambda x: x["date"])
+
+        # Calculate running balance with additional amounts
+        total_debit = 0.0
+        total_credit = 0.0
+        total_additional_amount = 0.0
+        running_balance = opening_bal if opening_bal_type == "Dr" else -opening_bal
+
+        tx_list = []
+
+        # Include Opening Balance row if present
+        if opening_bal > 0:
+            ob_adj = adj_map.get("ob", {})
+            ob_add_amt = float(ob_adj.get("additional_amount", 0.0))
+            ob_debit = opening_bal if opening_bal_type == "Dr" else 0.0
+            ob_credit = opening_bal if opening_bal_type == "Cr" else 0.0
+            
+            running_balance += ob_add_amt
+            total_debit += ob_debit
+            total_credit += ob_credit
+            total_additional_amount += ob_add_amt
+
+            tx_list.append(
+                MyLedgerEntry(
+                    tx_key="ob",
+                    date=start_dt or datetime(2000, 1, 1),
+                    tx_type="Opening Balance",
+                    reference_no="OB",
+                    debit=ob_debit,
+                    credit=ob_credit,
+                    additional_amount=ob_add_amt,
+                    running_balance=round(running_balance, 2),
+                    notes=ob_adj.get("notes")
+                )
+            )
+
+        for e in entries:
+            key = e["tx_key"]
+            adj_data = adj_map.get(key, {})
+            add_amt = float(adj_data.get("additional_amount", 0.0))
+            notes = adj_data.get("notes")
+
+            debit = float(e["debit"])
+            credit = float(e["credit"])
+            total_debit += debit
+            total_credit += credit
+            total_additional_amount += add_amt
+
+            # Running Balance = Previous Balance + Debit - Credit + Additional Amount
+            running_balance += (debit - credit + add_amt)
+
+            tx_list.append(
+                MyLedgerEntry(
+                    tx_key=key,
+                    date=e["date"],
+                    tx_type=e["tx_type"],
+                    reference_no=e["reference_no"],
+                    debit=debit,
+                    credit=credit,
+                    additional_amount=add_amt,
+                    running_balance=round(running_balance, 2),
+                    notes=notes
+                )
+            )
+
+        return MyLedgerResponse(
+            party_id=party_id,
+            party_name=party_name,
+            party_type=p_type,
+            total_debit=round(total_debit, 2),
+            total_credit=round(total_credit, 2),
+            total_additional_amount=round(total_additional_amount, 2),
+            grand_total=round(running_balance, 2),
+            transactions=tx_list
+        )
+
+    @staticmethod
+    async def save_my_ledger_adjustment(
+        db: AsyncSession,
+        data: MyLedgerAdjustmentCreate
+    ):
+        """Save or update per-transaction additional amount in My Ledger."""
+        from app.models.my_ledger import MyLedgerAdjustment
+        p_type = data.party_type.upper()
+        
+        stmt = select(MyLedgerAdjustment).filter(
+            MyLedgerAdjustment.party_type == p_type,
+            MyLedgerAdjustment.party_id == data.party_id,
+            MyLedgerAdjustment.tx_key == data.tx_key
+        )
+        q = await db.execute(stmt)
+        adj = q.scalar_one_or_none()
+
+        if adj:
+            adj.additional_amount = data.additional_amount
+            adj.tx_type = data.tx_type
+            adj.reference_no = data.reference_no
+            adj.notes = data.notes
+            if data.company_id:
+                adj.company_id = data.company_id
+        else:
+            adj = MyLedgerAdjustment(
+                party_type=p_type,
+                party_id=data.party_id,
+                tx_key=data.tx_key,
+                tx_type=data.tx_type,
+                reference_no=data.reference_no,
+                additional_amount=data.additional_amount,
+                notes=data.notes,
+                company_id=data.company_id
+            )
+            db.add(adj)
+
+        await db.commit()
+        await db.refresh(adj)
+        return adj
 

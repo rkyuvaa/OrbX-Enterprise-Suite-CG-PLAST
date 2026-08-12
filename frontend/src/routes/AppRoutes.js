@@ -33,6 +33,7 @@ import SalesReport from '../pages/Reports/SalesReport';
 import InventoryReport from '../pages/Reports/InventoryReport';
 import PurchaseReport from '../pages/Reports/PurchaseReport';
 import ExcelSalesSummary from '../pages/Reports/ExcelSalesSummary';
+import MyLedger from '../pages/Reports/MyLedger';
 
 // Admin Module Pages
 import Companies from '../pages/Admin/Companies';
@@ -109,6 +110,7 @@ const AppRoutes = () => {
           <Route path="sales" element={<SalesReport />} />
           <Route path="inventory" element={<InventoryReport />} />
           <Route path="purchase" element={<PurchaseReport />} />
+          <Route path="my-ledger" element={<MyLedger />} />
           <Route path="sales-summary" element={<ExcelSalesSummary />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>

@@ -12,3 +12,4 @@ from app.models.finance import Payment, PaymentReceipt, VendorPayment  # noqa
 from app.models.accounts import AccountGroup, LedgerAccount, VoucherType, JournalEntry, JournalLine  # noqa
 from app.models.audit import AuditLog  # noqa
 from app.models.recycling import RawMaterialReceipt, Recipe, RecipeItem, ProductionEntry, ProductionConsumedItem, DirectSale, ManufacturingProcess, ManufacturingProcessItem  # noqa
+from app.models.my_ledger import MyLedgerAdjustment  # noqa

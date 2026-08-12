@@ -16,6 +16,11 @@ from app.schemas.accounts import (
     PurchaseRegisterResponse,
     SalesRegisterResponse,
 )
+from app.schemas.my_ledger import (
+    MyLedgerResponse,
+    MyLedgerAdjustmentCreate,
+    MyLedgerAdjustmentOut,
+)
 from app.services.report_service import ReportService
 
 router = APIRouter()
@@ -69,6 +74,30 @@ async def get_supplier_ledger(
 ):
     """Retrieve detailed ledger report and metrics for a Supplier."""
     return await ReportService.get_supplier_ledger(db, supplier_id, start_date, end_date, company_id=company_id)
+
+
+@router.get("/my-ledger", response_model=MyLedgerResponse)
+async def get_my_ledger(
+    party_type: str = Query(..., description="CUSTOMER or SUPPLIER"),
+    party_id: UUID = Query(..., description="Customer or Supplier ID"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM or YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM or YYYY-MM-DD)"),
+    company_id: Optional[UUID] = Query(None, description="Filter by company"),
+    db: AsyncSession = Depends(deps.get_db),
+    current_user = Depends(deps.PermissionChecker("reports", "view"))
+):
+    """Retrieve My Ledger report with custom additional amounts for a customer or vendor."""
+    return await ReportService.get_my_ledger(db, party_type, party_id, start_date, end_date, company_id)
+
+
+@router.post("/my-ledger/adjustment", response_model=MyLedgerAdjustmentOut)
+async def save_my_ledger_adjustment(
+    adjustment_data: MyLedgerAdjustmentCreate,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user = Depends(deps.PermissionChecker("reports", "view"))
+):
+    """Save or update per-transaction additional amount for My Ledger."""
+    return await ReportService.save_my_ledger_adjustment(db, adjustment_data)
 
 
 @router.get("/sales-summary")
