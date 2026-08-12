@@ -154,8 +154,6 @@ const MyLedger = () => {
         }
         return item;
       });
-        return item;
-      });
 
       const { updatedTx, totalDebit, totalCredit, totalAdditional, grandTotal } = recalculateLedger(newTxList);
 
