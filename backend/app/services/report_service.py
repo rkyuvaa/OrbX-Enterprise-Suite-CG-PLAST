@@ -1904,15 +1904,19 @@ class ReportService:
         p_type = (party_type or "CUSTOMER").upper()
 
         # 1. Fetch stored adjustments for this party
-        from app.models.my_ledger import MyLedgerAdjustment
-        q_adj = await db.execute(
-            select(MyLedgerAdjustment).filter(
-                MyLedgerAdjustment.party_type == p_type,
-                MyLedgerAdjustment.party_id == party_id
+        adj_map = {}
+        try:
+            from app.models.my_ledger import MyLedgerAdjustment
+            q_adj = await db.execute(
+                select(MyLedgerAdjustment).filter(
+                    MyLedgerAdjustment.party_type == p_type,
+                    MyLedgerAdjustment.party_id == party_id
+                )
             )
-        )
-        adjustments_list = q_adj.scalars().all()
-        adj_map = {a.tx_key: {"additional_amount": a.additional_amount, "notes": a.notes} for a in adjustments_list}
+            adjustments_list = q_adj.scalars().all()
+            adj_map = {a.tx_key: {"additional_amount": a.additional_amount, "notes": a.notes} for a in adjustments_list}
+        except Exception:
+            adj_map = {}
 
         # 2. Parse start and end dates
         start_dt = None
@@ -2052,8 +2056,18 @@ class ReportService:
                     "credit": float(vpay.amount_paid or 0.0)
                 })
 
-        # Sort chronologically by date
-        entries.sort(key=lambda x: x["date"])
+        # Sort chronologically by date safely
+        def safe_date_sort_key(x):
+            d = x.get("date")
+            if not d:
+                return datetime.min
+            if isinstance(d, date) and not isinstance(d, datetime):
+                return datetime(d.year, d.month, d.day)
+            if isinstance(d, datetime) and d.tzinfo is not None:
+                return d.replace(tzinfo=None)
+            return d
+
+        entries.sort(key=safe_date_sort_key)
 
         # Calculate running balance with additional amounts
         total_debit = 0.0

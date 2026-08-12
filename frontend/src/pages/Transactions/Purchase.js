@@ -1349,20 +1349,34 @@ const Purchase = () => {
             {/* Summary / Totals */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
               <Box sx={{ width: '50%' }}>
-                {/* Customer Bill Info */}
+                {/* Customer Bill Info Columns Table */}
                 {(selectedPO?.cust_bill_date || selectedPO?.cust_bill_no || selectedPO?.ref) && (
-                  <Box sx={{ mb: 2, borderTop: '1px solid #e2e8f0', pt: 1.5 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, fontSize: '0.85rem' }}>
-                      Cust. Bill Date&nbsp;&nbsp;&nbsp;Cust. Bill No&nbsp;&nbsp;&nbsp;Ref
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '0.82rem', color: '#1e293b' }}>
-                      {selectedPO?.cust_bill_date ? formatBillingDate(selectedPO.cust_bill_date) : '—'}
-                      &nbsp;&nbsp;&nbsp;&nbsp;
-                      {selectedPO?.cust_bill_no || '—'}
-                      &nbsp;&nbsp;&nbsp;&nbsp;
-                      {selectedPO?.ref || '—'}
-                    </Typography>
-                  </Box>
+                  <TableContainer component={Paper} variant="outlined" sx={{ mb: 2, borderRadius: '4px', borderColor: '#cbd5e1' }}>
+                    <Table size="small" sx={{ 
+                      '& .MuiTableCell-root': { py: 0.5, px: 1, fontSize: '0.75rem' }
+                    }}>
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: '#f1f5f9' }}>
+                          <TableCell align="center" sx={{ fontWeight: 700, borderRight: '1px solid #cbd5e1', width: '33.33%' }}>Cust. Bill Date</TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 700, borderRight: '1px solid #cbd5e1', width: '33.33%' }}>Cust. Bill No</TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 700, width: '33.33%' }}>Ref</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell align="center" sx={{ borderRight: '1px solid #cbd5e1', fontWeight: 600 }}>
+                            {selectedPO?.cust_bill_date ? formatBillingDate(selectedPO.cust_bill_date) : '—'}
+                          </TableCell>
+                          <TableCell align="center" sx={{ borderRight: '1px solid #cbd5e1', fontWeight: 600 }}>
+                            {selectedPO?.cust_bill_no || '—'}
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontWeight: 600 }}>
+                            {selectedPO?.ref || '—'}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                 )}
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, fontSize: '0.85rem' }}>Instructions / Terms:</Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'pre-line', fontSize: '0.75rem', display: 'block', lineHeight: 1.3, mb: 2 }}>

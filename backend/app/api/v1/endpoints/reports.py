@@ -87,7 +87,12 @@ async def get_my_ledger(
     current_user = Depends(deps.PermissionChecker("reports", "view"))
 ):
     """Retrieve My Ledger report with custom additional amounts for a customer or vendor."""
-    return await ReportService.get_my_ledger(db, party_type, party_id, start_date, end_date, company_id)
+    try:
+        return await ReportService.get_my_ledger(db, party_type, party_id, start_date, end_date, company_id)
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=400, detail=str(err))
 
 
 @router.post("/my-ledger/adjustment", response_model=MyLedgerAdjustmentOut)
@@ -97,7 +102,12 @@ async def save_my_ledger_adjustment(
     current_user = Depends(deps.PermissionChecker("reports", "view"))
 ):
     """Save or update per-transaction additional amount for My Ledger."""
-    return await ReportService.save_my_ledger_adjustment(db, adjustment_data)
+    try:
+        return await ReportService.save_my_ledger_adjustment(db, adjustment_data)
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=400, detail=str(err))
 
 
 @router.get("/sales-summary")
