@@ -10,6 +10,21 @@ import CommonTable from '../../components/CommonTable';
 import CommonModal from '../../components/CommonModal';
 import FormAutocomplete from '../../components/FormAutocomplete';
 
+const getErrorMessage = (err, fallbackMessage) => {
+  const detail = err?.response?.data?.detail;
+  if (!detail) return err?.message || fallbackMessage;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((e) => (typeof e === 'object' && e?.msg ? (e.loc ? `${e.loc.join(' -> ')}: ${e.msg}` : e.msg) : String(e)))
+      .join('; ');
+  }
+  if (typeof detail === 'object') {
+    return detail.msg || JSON.stringify(detail);
+  }
+  return String(detail);
+};
+
 const Purchase = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [pos, setPos] = useState([]);
@@ -269,7 +284,7 @@ const Purchase = () => {
         await apiClient.post(`/purchase/po/${po.id}/cancel`);
         loadData();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to cancel Purchase Order.');
+        setError(getErrorMessage(err, 'Failed to cancel Purchase Order.'));
       }
     }
   };
@@ -280,7 +295,7 @@ const Purchase = () => {
         await apiClient.delete(`/purchase/po/${po.id}`);
         loadData();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to delete Purchase Order.');
+        setError(getErrorMessage(err, 'Failed to delete Purchase Order.'));
       }
     }
   };
@@ -291,7 +306,7 @@ const Purchase = () => {
         await apiClient.post(`/purchase/grn/${grn.id}/cancel`);
         loadData();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to cancel Goods Receipt Note.');
+        setError(getErrorMessage(err, 'Failed to cancel Goods Receipt Note.'));
       }
     }
   };
@@ -302,7 +317,7 @@ const Purchase = () => {
         await apiClient.delete(`/purchase/grn/${grn.id}`);
         loadData();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to delete GRN.');
+        setError(getErrorMessage(err, 'Failed to delete GRN.'));
       }
     }
   };
@@ -313,7 +328,7 @@ const Purchase = () => {
         await apiClient.post(`/purchase/bills/${bill.id}/cancel`);
         loadData();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to cancel Purchase Entry Bill.');
+        setError(getErrorMessage(err, 'Failed to cancel Purchase Entry Bill.'));
       }
     }
   };
@@ -324,7 +339,7 @@ const Purchase = () => {
         await apiClient.delete(`/purchase/bills/${bill.id}`);
         loadData();
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to delete Purchase Bill.');
+        setError(getErrorMessage(err, 'Failed to delete Purchase Bill.'));
       }
     }
   };
@@ -344,12 +359,12 @@ const Purchase = () => {
 
   const handleOpenEditPO = (po) => {
     setSelectedPO(po);
-    setPoSupplierId(po.supplier_id);
+    setPoSupplierId(po.supplier_id || '');
     setSelectedSupplier({
       id: po.supplier_id,
       name: po.supplier_name
     });
-    setPoBranchId(po.company_id);
+    setPoBranchId(po.company_id || activeBranchId || (branches.length > 0 ? branches[0].id : ''));
     setPoDate(po.date ? new Date(po.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
     setPoItems(
       po.items.map((item) => ({
@@ -409,7 +424,7 @@ const Purchase = () => {
       });
       setOpenQuickSupplierModal(false);
     } catch (err) {
-      setQuickSupplierError(err.response?.data?.detail || 'Failed to create supplier.');
+      setQuickSupplierError(getErrorMessage(err, 'Failed to create supplier.'));
     } finally {
       setQuickSupplierLoading(false);
     }
@@ -466,7 +481,7 @@ const Purchase = () => {
       }));
       setOpenQuickProductModal(false);
     } catch (err) {
-      setQuickProductError(err.response?.data?.detail || 'Failed to create product.');
+      setQuickProductError(getErrorMessage(err, 'Failed to create product.'));
     } finally {
       setQuickProductLoading(false);
     }
@@ -492,14 +507,28 @@ const Purchase = () => {
   };
 
   const submitPO = async () => {
+    if (!poSupplierId) {
+      setError('Please select a supplier.');
+      return;
+    }
+    const finalBranchId = poBranchId || activeBranchId || (branches.length > 0 ? branches[0].id : null);
+    if (!finalBranchId) {
+      setError('Please select a valid company.');
+      return;
+    }
+    if (!poItems || poItems.length === 0 || poItems.some((it) => !it.product_id)) {
+      setError('Please select valid products for all line items.');
+      return;
+    }
+
     try {
       const payload = {
         supplier_id: poSupplierId,
-        company_id: poBranchId,
+        company_id: finalBranchId,
         date: poDate ? new Date(poDate).toISOString() : null,
-        cust_bill_date: poCustBillDate || null,
-        cust_bill_no: poCustBillNo || null,
-        ref: poRef || null,
+        cust_bill_date: (poCustBillDate && poCustBillDate.trim()) ? poCustBillDate.trim() : null,
+        cust_bill_no: (poCustBillNo && poCustBillNo.trim()) ? poCustBillNo.trim() : null,
+        ref: (poRef && poRef.trim()) ? poRef.trim() : null,
         items: poItems.map(item => ({
           product_id: item.product_id,
           qty: item.qty,
@@ -515,7 +544,7 @@ const Purchase = () => {
       setOpenPOModal(false);
       loadData();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to submit Purchase Order.');
+      setError(getErrorMessage(err, 'Failed to submit Purchase Order.'));
     }
   };
 
@@ -557,7 +586,7 @@ const Purchase = () => {
       setOpenGRNModal(false);
       loadData();
     } catch (err) {
-      setError('Failed to log Goods Receipt Note.');
+      setError(getErrorMessage(err, 'Failed to log Goods Receipt Note.'));
     }
   };
 
@@ -593,7 +622,7 @@ const Purchase = () => {
       setOpenBillModal(false);
       loadData();
     } catch (err) {
-      setError('Failed to log Supplier Invoice Bill.');
+      setError(getErrorMessage(err, 'Failed to log Supplier Invoice Bill.'));
     }
   };
 
