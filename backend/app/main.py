@@ -14,6 +14,33 @@ async def lifespan(app: FastAPI):
     # Ensure all financial year sequences exist on startup
     async with SessionLocal() as db:
         await AccountServices.ensure_fy_sequences(db)
+        
+        # Ensure my_ledger_adjustments table and constraints exist
+        from sqlalchemy import text
+        try:
+            await db.execute(text("""
+            CREATE TABLE IF NOT EXISTS my_ledger_adjustments (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                party_type VARCHAR(30) NOT NULL,
+                party_id UUID NOT NULL,
+                tx_key VARCHAR(100) NOT NULL,
+                tx_type VARCHAR(50),
+                reference_no VARCHAR(100),
+                additional_amount DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+                notes VARCHAR(255),
+                company_id UUID,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                CONSTRAINT uq_my_ledger_party_tx_key UNIQUE (party_type, party_id, tx_key)
+            );
+            CREATE INDEX IF NOT EXISTS ix_my_ledger_adjustments_party_type ON my_ledger_adjustments(party_type);
+            CREATE INDEX IF NOT EXISTS ix_my_ledger_adjustments_party_id ON my_ledger_adjustments(party_id);
+            CREATE INDEX IF NOT EXISTS ix_my_ledger_adjustments_tx_key ON my_ledger_adjustments(tx_key);
+            CREATE INDEX IF NOT EXISTS ix_my_ledger_adjustments_company_id ON my_ledger_adjustments(company_id);
+            """))
+            await db.commit()
+        except Exception as e:
+            print(f"Error auto-creating my_ledger_adjustments: {e}")
     yield
 
 # Create core FastAPI application instance
