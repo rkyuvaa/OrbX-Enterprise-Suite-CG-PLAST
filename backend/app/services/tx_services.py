@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import List, Optional
 from uuid import UUID, uuid4
 from fastapi import HTTPException, status
@@ -18,6 +18,28 @@ from app.schemas.transaction import (
     StockTransactionCreate, SalesOrderCreate, InvoiceCreate,
     PaymentCreate, StockTransferCreate, VendorPaymentCreate
 )
+
+
+def _parse_date_obj(val) -> Optional[date]:
+    if not val:
+        return None
+    if isinstance(val, date) and not isinstance(val, datetime):
+        return val
+    if isinstance(val, datetime):
+        return val.date()
+    if isinstance(val, str):
+        val_str = val.strip()
+        if not val_str:
+            return None
+        try:
+            return datetime.strptime(val_str[:10], "%Y-%m-%d").date()
+        except Exception:
+            pass
+        try:
+            return datetime.strptime(val_str[:10], "%d-%m-%Y").date()
+        except Exception:
+            pass
+    return None
 
 
 class TxServices:
@@ -91,7 +113,7 @@ class TxServices:
             company_id=po_data.company_id,
             po_number=po_no,
             expected_delivery=po_data.expected_delivery,
-            cust_bill_date=po_data.cust_bill_date,
+            cust_bill_date=_parse_date_obj(po_data.cust_bill_date),
             cust_bill_no=po_data.cust_bill_no,
             ref=po_data.ref,
             status="Draft",
@@ -185,9 +207,12 @@ class TxServices:
             raise HTTPException(status_code=404, detail="Purchase Order not found.")
         
         po.supplier_id = po_data.supplier_id
-        po.company_id = po_data.company_id
+        if po_data.company_id:
+            po.company_id = po_data.company_id
+        if po_data.date:
+            po.date = po_data.date
         po.expected_delivery = po_data.expected_delivery
-        po.cust_bill_date = po_data.cust_bill_date
+        po.cust_bill_date = _parse_date_obj(po_data.cust_bill_date)
         po.cust_bill_no = po_data.cust_bill_no
         po.ref = po_data.ref
 

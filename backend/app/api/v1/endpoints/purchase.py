@@ -35,7 +35,12 @@ async def create_purchase_order(
     current_user = Depends(deps.PermissionChecker("purchase", "create"))
 ):
     """Create a new Purchase Order."""
-    return await TxServices.create_purchase_order(db, po_data)
+    try:
+        return await TxServices.create_purchase_order(db, po_data)
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=400, detail=str(err))
 
 
 # ==========================================
@@ -92,7 +97,12 @@ async def update_purchase_order(
     current_user = Depends(deps.PermissionChecker("purchase", "create"))
 ):
     """Update an existing Purchase Order."""
-    return await TxServices.update_purchase_order(db, po_id, po_data)
+    try:
+        return await TxServices.update_purchase_order(db, po_id, po_data)
+    except HTTPException:
+        raise
+    except Exception as err:
+        raise HTTPException(status_code=400, detail=str(err))
 
 
 @router.post("/po/{po_id}/cancel", response_model=PurchaseOrderOut)
