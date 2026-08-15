@@ -358,7 +358,9 @@ class TxServices:
                 bill_subtotal += item_val
                 bill_tax += item_tax
 
-        bill_total = bill_subtotal + bill_tax
+        bill_subtotal = round(bill_subtotal, 2)
+        bill_tax = round(bill_tax, 2)
+        bill_total = round(bill_subtotal + bill_tax, 2)
         bill_no = f"BILL-{grn.grn_number}"
 
         entry_data = PurchaseEntryCreate(

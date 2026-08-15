@@ -287,7 +287,9 @@ class AccountServices:
         dr_total = Decimal("0.00")
         cr_total = Decimal("0.00")
         for line in lines:
-            amt = Decimal(str(line.amount))
+            # Quantize amount to 2 decimal places to resolve float representation errors
+            amt = Decimal(str(line.amount)).quantize(Decimal("0.01"))
+            line.amount = float(amt)
             if amt <= Decimal("0.00"):
                 raise ValueError("Journal line amount must be greater than zero.")
             if line.dr_cr == "Dr":
