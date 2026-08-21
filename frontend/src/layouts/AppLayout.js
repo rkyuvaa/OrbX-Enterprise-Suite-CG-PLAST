@@ -618,7 +618,7 @@ const AppLayout = () => {
             >
               <Box
                 component="img"
-                src="/logo.svg"
+                src="/logo_light.png"
                 alt="OrbX Logo"
                 sx={{
                   height: 42,
@@ -630,7 +630,7 @@ const AppLayout = () => {
                 }}
               />
               <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 800, fontSize: isSmallMobile ? '0.95rem' : '1.1rem', letterSpacing: '-0.3px', color: '#1b4332', lineHeight: 1 }}>
-                OrbX {!isSmallMobile && <span style={{ fontWeight: 400, opacity: 0.8, color: '#334155' }}>Enterprise Suite</span>}
+                {!isSmallMobile && <span style={{ fontWeight: 400, opacity: 0.8, color: '#334155' }}>Enterprise Suite</span>}
               </Typography>
             </Box>
 
