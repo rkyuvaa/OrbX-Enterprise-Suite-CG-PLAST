@@ -30,9 +30,9 @@ const AuthLayout = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box
             component="img"
-            src="/logo.png"
+            src="/logo_dark.png"
             alt="OrbX Logo"
-            sx={{ height: 50, width: 'auto' }}
+            sx={{ height: 75, width: 'auto' }}
           />
           <Box
             sx={{
@@ -229,10 +229,10 @@ const AuthLayout = () => {
           <Box sx={{ mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
             <Box
               component="img"
-              src="/logo.png"
+              src="/logo_light.png"
               alt="OrbX Logo"
               sx={{
-                height: { xs: 80, sm: 100, md: 113 },
+                height: { xs: 120, sm: 150, md: 170 },
                 width: 'auto',
                 filter: 'drop-shadow(0px 4px 10px rgba(27, 67, 50, 0.15))',
                 animation: 'pulse 3s infinite ease-in-out',
@@ -252,7 +252,7 @@ const AuthLayout = () => {
           <Outlet />
         </Paper>
 
-        {/* Bottom Section: Security Message and Subtle Footer */}
+        {/* Bottom Section: Subtle Footer */}
         <Box
           sx={{
             mt: 4,
@@ -263,16 +263,6 @@ const AuthLayout = () => {
             gap: 1.5,
           }}
         >
-          {/* Security Message */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, opacity: 0.6 }}>
-            <svg width="12" height="14" viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 0L0 2.25V6.75C0 10.3725 2.5575 13.0125 6 13.5C9.4425 13.0125 12 10.3725 12 6.75V2.25L6 0ZM4.875 9.75L2.25 7.125L3.1875 6.1875L4.875 7.875L8.8125 3.9375L9.75 4.875L4.875 9.75Z" fill="#a3b899" />
-            </svg>
-            <Typography variant="caption" sx={{ color: '#a3b899', fontWeight: 500, letterSpacing: '0.2px' }}>
-              Secure 256-bit SSL Connection
-            </Typography>
-          </Box>
-
           {/* Footer Links */}
           <Box
             sx={{
