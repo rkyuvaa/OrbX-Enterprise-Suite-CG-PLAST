@@ -1313,7 +1313,7 @@ const Purchase = () => {
             </Box>
 
             {/* Items Grid */}
-            <TableContainer sx={{ mb: 6 }}>
+            <TableContainer sx={{ mb: '100px' }}>
               <Table size="small" sx={{ 
                 '& .MuiTableCell-root': { py: 0.25, px: 1, fontSize: '0.85rem' },
                 '& .MuiTableCell-root:first-of-type': { paddingLeft: '0 !important' },

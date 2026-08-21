@@ -949,7 +949,7 @@ const Inventory = () => {
             </Box>
 
             {/* Items Table */}
-            <TableContainer sx={{ mb: 6, borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+            <TableContainer sx={{ mb: '100px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
               <Table size="small">
                 <TableHead sx={{ backgroundColor: '#f8fafc' }}>
                   <TableRow>
