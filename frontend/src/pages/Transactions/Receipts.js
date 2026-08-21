@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import apiClient from '../../api/client';
 import CommonTable from '../../components/CommonTable';
 import CommonModal from '../../components/CommonModal';
+import PrintFooter from '../../components/PrintFooter';
 
 const Receipts = () => {
   const [payments, setPayments] = useState([]);
@@ -352,6 +353,7 @@ const Receipts = () => {
               <Typography variant="body2" sx={{ fontWeight: 600 }}>Cashier Signature</Typography>
             </Grid>
           </Grid>
+          <PrintFooter />
         </Box>
       </CommonModal>
     </Box>

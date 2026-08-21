@@ -9,6 +9,7 @@ import PageHeader from '../../components/PageHeader';
 import CommonTable from '../../components/CommonTable';
 import CommonModal from '../../components/CommonModal';
 import FormAutocomplete from '../../components/FormAutocomplete';
+import PrintFooter from '../../components/PrintFooter';
 
 const getErrorMessage = (err, fallbackMessage) => {
   const detail = err?.response?.data?.detail;
@@ -150,7 +151,7 @@ const Purchase = () => {
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
     pageStyle: `
-      @page { size: A4 portrait; margin: 0 !important; }
+      @page { margin: 12mm 15mm 22mm 15mm !important; }
       body { margin: 0 !important; padding: 0 !important; }
     `
   });
@@ -1447,6 +1448,7 @@ const Purchase = () => {
                 {printBranch?.invoice_footer || 'Thank you for your business!'}
               </Typography>
             </Box>
+            <PrintFooter />
           </Box>
         </Box>
       </CommonModal>

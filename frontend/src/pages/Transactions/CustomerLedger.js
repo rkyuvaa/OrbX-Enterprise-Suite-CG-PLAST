@@ -17,6 +17,7 @@ import {
 
 import apiClient from '../../api/client';
 import CommonTable from '../../components/CommonTable';
+import PrintFooter from '../../components/PrintFooter';
 
 const CustomerLedger = () => {
   const { activeBranchId } = useSelector((state) => state.branch);
@@ -475,6 +476,7 @@ const CustomerLedger = () => {
               This is a computer-generated statement of accounts. No signature required.
             </Typography>
           </Box>
+          <PrintFooter />
         </Box>
       </div>
     </Box>
