@@ -90,17 +90,6 @@ const theme = createTheme({
         input[type=number] {
           -moz-appearance: textfield;
         }
-
-        /* Global Print Layout Margins */
-        @media print {
-          @page {
-            margin: 12mm 15mm 22mm 15mm !important;
-          }
-          body {
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-        }
       `,
     },
     MuiButton: {

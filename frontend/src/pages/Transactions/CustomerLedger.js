@@ -17,7 +17,6 @@ import {
 
 import apiClient from '../../api/client';
 import CommonTable from '../../components/CommonTable';
-import PrintFooter from '../../components/PrintFooter';
 
 const CustomerLedger = () => {
   const { activeBranchId } = useSelector((state) => state.branch);
@@ -332,7 +331,7 @@ const CustomerLedger = () => {
             '@media print': {
               width: '210mm !important',
               maxWidth: '210mm !important',
-              minHeight: 'auto !important',
+              minHeight: '297mm !important',
               padding: '12mm 15mm !important',
               margin: '0 !important',
               boxShadow: 'none !important',
@@ -476,7 +475,6 @@ const CustomerLedger = () => {
               This is a computer-generated statement of accounts. No signature required.
             </Typography>
           </Box>
-          <PrintFooter />
         </Box>
       </div>
     </Box>

@@ -7,7 +7,6 @@ import { useSelector } from 'react-redux';
 import apiClient from '../../api/client';
 import CommonTable from '../../components/CommonTable';
 import CommonModal from '../../components/CommonModal';
-import PrintFooter from '../../components/PrintFooter';
 
 const Receipts = () => {
   const [payments, setPayments] = useState([]);
@@ -232,7 +231,7 @@ const Receipts = () => {
             '@media print': {
               width: '210mm !important',
               maxWidth: '210mm !important',
-              minHeight: 'auto !important',
+              minHeight: '297mm !important',
               padding: '12mm 15mm !important',
               margin: '0 !important',
               boxShadow: 'none !important',
@@ -353,7 +352,6 @@ const Receipts = () => {
               <Typography variant="body2" sx={{ fontWeight: 600 }}>Cashier Signature</Typography>
             </Grid>
           </Grid>
-          <PrintFooter />
         </Box>
       </CommonModal>
     </Box>

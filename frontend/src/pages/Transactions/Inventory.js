@@ -19,7 +19,6 @@ import PageHeader from '../../components/PageHeader';
 import CommonTable from '../../components/CommonTable';
 import CommonModal from '../../components/CommonModal';
 import FormInput from '../../components/FormInput';
-import PrintFooter from '../../components/PrintFooter';
 
 const schema = yup.object().shape({
   product_id: yup.string().required('Product is required'),
@@ -312,7 +311,7 @@ const Inventory = () => {
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
     pageStyle: `
-      @page { margin: 12mm 15mm 22mm 15mm !important; }
+      @page { size: A4 portrait; margin: 0 !important; }
       @media print {
         body { -webkit-print-color-adjust: exact; }
       }
@@ -847,7 +846,7 @@ const Inventory = () => {
               '@media print': {
                 width: '210mm !important',
                 maxWidth: '210mm !important',
-                minHeight: 'auto !important',
+                minHeight: '297mm !important',
                 padding: '12mm 15mm !important',
                 margin: '0 !important',
                 boxShadow: 'none !important',
@@ -1046,7 +1045,6 @@ const Inventory = () => {
                 <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>Authorized Signatory</Typography>
               </Box>
             </Box>
-            <PrintFooter />
           </Box>
         </Box>
       </CommonModal>
