@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from '../../api/client';
+import { getErrorMessage } from '../../utils/errors';
 
 export const fetchBranches = createAsyncThunk(
   'branch/fetchBranches',
@@ -8,7 +9,7 @@ export const fetchBranches = createAsyncThunk(
       const response = await apiClient.get('/admin/companies');
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.detail || 'Failed to fetch companies.');
+      return rejectWithValue(getErrorMessage(error.response?.data?.detail) || 'Failed to fetch companies.');
     }
   }
 );

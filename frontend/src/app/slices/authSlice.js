@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from '../../api/client';
+import { getErrorMessage } from '../../utils/errors';
 
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
@@ -15,7 +16,7 @@ export const loginUser = createAsyncThunk(
       const userProfile = await apiClient.get('/auth/me');
       return userProfile.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.detail || 'Login failed. Please check credentials.');
+      return rejectWithValue(getErrorMessage(error.response?.data?.detail) || 'Login failed. Please check credentials.');
     }
   }
 );
@@ -27,7 +28,7 @@ export const fetchUserProfile = createAsyncThunk(
       const response = await apiClient.get('/auth/me');
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.detail || 'Failed to fetch user session.');
+      return rejectWithValue(getErrorMessage(error.response?.data?.detail) || 'Failed to fetch user session.');
     }
   }
 );
