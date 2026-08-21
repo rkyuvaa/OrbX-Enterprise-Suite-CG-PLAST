@@ -1222,7 +1222,7 @@ const Purchase = () => {
               '@media print': {
                 width: '210mm !important',
                 maxWidth: '210mm !important',
-                minHeight: '297mm !important',
+                minHeight: 'auto !important',
                 padding: '12mm 15mm !important',
                 margin: '0 !important',
                 boxShadow: 'none !important',

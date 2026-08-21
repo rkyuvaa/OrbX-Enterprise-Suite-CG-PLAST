@@ -11,12 +11,10 @@ const PrintFooter = () => {
         '@media print': {
           display: 'flex',
           position: 'fixed',
-          bottom: '-15mm', // Position inside the page margin area
-          left: 0,
-          right: 0,
-          justifyContent: 'center',
+          bottom: '-15mm', // Position inside the 22mm bottom page margin area
+          left: '15mm', // Align with the 15mm left page margin
           alignItems: 'center',
-          gap: 1.5,
+          gap: 0.5,
           color: '#64748b',
           zIndex: 99999,
           backgroundColor: 'transparent',
@@ -24,37 +22,50 @@ const PrintFooter = () => {
         }
       }}
     >
+      <Typography
+        sx={{
+          color: '#94a3b8',
+          fontSize: '10px',
+          fontWeight: 500,
+          fontFamily: 'Inter, -apple-system, sans-serif',
+          lineHeight: 1,
+        }}
+      >
+        Powered by
+      </Typography>
       <Box
         component="img"
         src="/logo_light.png"
         alt="OrbX Logo"
         sx={{
-          height: '14px',
+          height: '10px', // Exact height requested by user (10px)
           width: 'auto',
           objectFit: 'contain',
           display: 'block',
+          mx: 0.25,
         }}
       />
       <Typography
-        variant="caption"
         sx={{
           color: '#94a3b8',
-          fontWeight: 700,
-          fontSize: '0.8rem',
+          fontSize: '10px',
+          fontWeight: 500,
+          fontFamily: 'Inter, -apple-system, sans-serif',
           lineHeight: 1,
         }}
       >
-        ·
+        -
       </Typography>
       <Link
         href={ORBX_WEBSITE_URL}
         target="_blank"
         rel="noopener noreferrer"
         sx={{
-          color: '#64748b', // Muted gray text
+          color: '#64748b',
           textDecoration: 'none',
           fontWeight: 600,
-          fontSize: '0.75rem',
+          fontSize: '10px',
+          fontFamily: 'Inter, -apple-system, sans-serif',
           lineHeight: 1,
           '&:hover': {
             textDecoration: 'underline',
