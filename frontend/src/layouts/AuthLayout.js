@@ -32,7 +32,7 @@ const AuthLayout = () => {
             component="img"
             src="/logo_dark.png"
             alt="OrbX Logo"
-            sx={{ height: 150, width: 'auto' }}
+            sx={{ height: 100, width: 'auto' }}
           />
           <Box
             sx={{
@@ -204,12 +204,12 @@ const AuthLayout = () => {
           flexDirection: 'column',
           justifyContent: 'space-between',
           alignItems: 'center',
-          p: { xs: 2, sm: 4, md: 6 },
+          p: { xs: 2, sm: 3, md: 4 },
           minHeight: '100vh',
         }}
       >
         {/* Top spacer to balance layout */}
-        <Box sx={{ height: { xs: 20, md: 40 } }} />
+        <Box sx={{ height: { xs: 10, md: 20 } }} />
 
         {/* Centered Login Card */}
         <Paper
@@ -217,7 +217,7 @@ const AuthLayout = () => {
           sx={{
             width: '100%',
             maxWidth: 440,
-            p: { xs: 3, sm: 4 },
+            p: { xs: 2.5, sm: 3.5 },
             borderRadius: '16px',
             boxShadow: '0 12px 40px rgba(0, 0, 0, 0.25)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -226,13 +226,13 @@ const AuthLayout = () => {
             textAlign: 'center',
           }}
         >
-          <Box sx={{ mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ mb: 2.5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
             <Box
               component="img"
               src="/logo_light.png"
               alt="OrbX Logo"
               sx={{
-                height: { xs: 240, sm: 300, md: 340 },
+                height: { xs: 140, sm: 180, md: 210 },
                 width: 'auto',
                 filter: 'drop-shadow(0px 4px 10px rgba(27, 67, 50, 0.15))',
                 animation: 'pulse 3s infinite ease-in-out',
