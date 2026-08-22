@@ -32,7 +32,7 @@ const AuthLayout = () => {
             component="img"
             src="/logo_dark.png"
             alt="OrbX Logo"
-            sx={{ height: 75, width: 'auto' }}
+            sx={{ height: 150, width: 'auto' }}
           />
           <Box
             sx={{
@@ -232,7 +232,7 @@ const AuthLayout = () => {
               src="/logo_light.png"
               alt="OrbX Logo"
               sx={{
-                height: { xs: 120, sm: 150, md: 170 },
+                height: { xs: 240, sm: 300, md: 340 },
                 width: 'auto',
                 filter: 'drop-shadow(0px 4px 10px rgba(27, 67, 50, 0.15))',
                 animation: 'pulse 3s infinite ease-in-out',

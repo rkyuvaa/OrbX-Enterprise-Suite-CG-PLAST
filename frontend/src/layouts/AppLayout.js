@@ -621,7 +621,7 @@ const AppLayout = () => {
                 src="/logo_light.png"
                 alt="OrbX Logo"
                 sx={{
-                  height: 42,
+                  height: 84,
                   width: 'auto',
                   transition: 'transform 0.3s ease',
                   '&:hover': {
