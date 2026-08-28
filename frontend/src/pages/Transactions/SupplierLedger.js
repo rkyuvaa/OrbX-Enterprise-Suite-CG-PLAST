@@ -326,11 +326,16 @@ const SupplierLedger = () => {
             color: '#000000',
             fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             boxShadow: 'none',
+            '& .MuiTableCell-root': {
+              px: '6px !important',
+              py: '4px !important',
+              fontSize: '0.72rem !important',
+            },
             '@media print': {
               width: '210mm !important',
               maxWidth: '210mm !important',
               minHeight: '297mm !important',
-              padding: '12mm 15mm !important',
+              padding: '12mm 10mm !important',
               margin: '0 !important',
               boxShadow: 'none !important',
               boxSizing: 'border-box !important',
