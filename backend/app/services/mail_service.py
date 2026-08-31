@@ -12,6 +12,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 from typing import Optional, List, Dict, Any
 
+import os
 import aiosmtplib
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -19,7 +20,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    HRFlowable, KeepTogether
+    HRFlowable, KeepTogether, Image
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 
@@ -37,6 +38,23 @@ SLATE_400 = colors.HexColor("#94A3B8")
 SLATE_200 = colors.HexColor("#E2E8F0")
 BLACK = colors.black
 WHITE = colors.white
+
+
+def _resolve_logo_path(logo_url: Optional[str]) -> Optional[str]:
+    """Resolve static logo path on disk from URL string."""
+    if not logo_url:
+        return None
+    clean_path = logo_url.replace("/api/v1/", "").lstrip("/")
+    candidates = [
+        clean_path,
+        os.path.join("backend", clean_path),
+        os.path.abspath(clean_path),
+        os.path.abspath(os.path.join("backend", clean_path)),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return None
 
 
 def _num_to_words(num: float) -> str:
@@ -83,16 +101,7 @@ def _num_to_words(num: float) -> str:
 
 def generate_invoice_pdf(data: Dict[str, Any]) -> bytes:
     """
-    Build a professional A4 Tax Invoice PDF and return raw bytes.
-
-    Expected keys in `data`:
-      invoice_number, date (datetime), due_date (optional),
-      company_name, company_address, company_gstin, company_email, company_phone,
-      customer_name, customer_gstin, customer_billing_address, customer_shipping_address,
-      branch_code, invoice_terms, invoice_footer,
-      items: [{ product_name, hsn_code, qty, rate, discount_amount, tax_rate, tax_amount, amount }],
-      subtotal, discount_amount, tax_amount, total_amount,
-      gst_breakup: { cgst, sgst, igst }
+    Build a professional A4 Tax Invoice PDF matching the print layout and return raw bytes.
     """
     buf = io.BytesIO()
     PAGE_W, PAGE_H = A4
@@ -135,47 +144,70 @@ def generate_invoice_pdf(data: Dict[str, Any]) -> bytes:
 
     story = []
 
-    # ── HEADER: Company block ──────────────────────────────────────────────
-    story.append(Paragraph(data.get("company_name", "ORBX CORPORATION"), s_company))
-    addr_parts = filter(None, [
+    # ── HEADER: Company block + Logo ───────────────────────────────────────
+    logo_path = _resolve_logo_path(data.get("company_logo"))
+    logo_flowable = None
+    if logo_path:
+        try:
+            logo_flowable = Image(logo_path, width=32 * mm, height=20 * mm)
+        except Exception:
+            logo_flowable = None
+
+    addr_parts = list(filter(None, [
         data.get("company_address", ""),
-        f"GSTIN: {data.get('company_gstin', '')}",
-        f"Email: {data.get('company_email', '')}  |  Phone: {data.get('company_phone', '')}",
-    ])
-    story.append(Paragraph("<br/>".join(addr_parts), s_company_sub))
-    story.append(HRFlowable(width="100%", thickness=1, color=FOREST_GREEN,
-                             spaceAfter=4 * mm))
+        f"GSTIN: <b>{data.get('company_gstin', '')}</b>" if data.get('company_gstin') else "",
+        f"Email: {data.get('company_email', '')}  |  Phone: {data.get('company_phone', '')}" if (data.get('company_email') or data.get('company_phone')) else "",
+    ]))
+
+    comp_text_para = [
+        Paragraph(data.get("company_name", "ORBX CORPORATION"), s_company),
+        Paragraph("<br/>".join(addr_parts), s_company_sub),
+    ]
+
+    if logo_flowable:
+        header_table = Table(
+            [[logo_flowable, comp_text_para]],
+            colWidths=[38 * mm, PAGE_W - 2 * MARGIN - 38 * mm],
+        )
+        header_table.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("ALIGN", (0, 0), (0, 0), "LEFT"),
+            ("ALIGN", (1, 0), (1, 0), "CENTER"),
+        ]))
+        story.append(header_table)
+    else:
+        story.append(Paragraph(data.get("company_name", "ORBX CORPORATION"), s_company))
+        story.append(Paragraph("<br/>".join(addr_parts), s_company_sub))
+
+    story.append(HRFlowable(width="100%", thickness=1, color=FOREST_GREEN, spaceBefore=2 * mm, spaceAfter=3 * mm))
 
     # ── DOCUMENT TITLE + NUMBER ─────────────────────────────────────────────
     inv_num = data.get("invoice_number", "")
     inv_date = data.get("date")
-    date_str = inv_date.strftime("%d-%m-%Y") if inv_date else ""
+    date_str = inv_date.strftime("%d-%m-%Y") if hasattr(inv_date, "strftime") else str(inv_date or "")
     due_date = data.get("due_date")
-    due_str = due_date.strftime("%d-%m-%Y") if due_date else ""
+    due_str = due_date.strftime("%d-%m-%Y") if hasattr(due_date, "strftime") else str(due_date or "")
+    vehicle_no = data.get("vehicle_no") or ""
 
-    title_table = Table(
-        [[
-            Paragraph("TAX INVOICE", s_doc_title),
-        ]],
-        colWidths=[PAGE_W - 2 * MARGIN],
-    )
-    story.append(title_table)
-
-    meta_rows = [[
-        Paragraph(f"<b>Invoice No.:</b> {inv_num}", s_doc_meta),
-    ]]
-    if date_str:
-        meta_rows.append([Paragraph(f"<b>Date:</b> {date_str}", s_doc_meta)])
+    meta_rows = [
+        [Paragraph(f"<b>TAX INVOICE</b>", s_doc_title), Paragraph(f"<b>Invoice No.:</b> {inv_num}", s_doc_meta)],
+        [Paragraph("", s_doc_title), Paragraph(f"<b>Date:</b> {date_str}", s_doc_meta)],
+    ]
     if due_str:
-        meta_rows.append([Paragraph(f"<b>Due Date:</b> {due_str}", s_doc_meta)])
+        meta_rows.append([Paragraph("", s_doc_title), Paragraph(f"<b>Due Date:</b> {due_str}", s_doc_meta)])
+    if vehicle_no:
+        meta_rows.append([Paragraph("", s_doc_title), Paragraph(f"<b>Vehicle No:</b> {vehicle_no}", s_doc_meta)])
 
-    meta_tbl = Table(meta_rows, colWidths=[PAGE_W - 2 * MARGIN])
+    meta_tbl = Table(meta_rows, colWidths=[(PAGE_W - 2 * MARGIN) * 0.5, (PAGE_W - 2 * MARGIN) * 0.5])
+    meta_tbl.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+    ]))
     story.append(meta_tbl)
-    story.append(HRFlowable(width="100%", thickness=0.5, color=SLATE_200,
-                             spaceBefore=2 * mm, spaceAfter=3 * mm))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=SLATE_200, spaceBefore=2 * mm, spaceAfter=3 * mm))
 
     # ── BILL TO / SHIP TO ──────────────────────────────────────────────────
-    def party_block(label: str, name: str, gstin: str, address: str, vehicle_no: str = None) -> List:
+    def party_block(label: str, name: str, gstin: str, address: str, veh: str = None) -> List:
         block = [
             Paragraph(label, s_section_label),
             Paragraph(name or "", s_party_name),
@@ -183,8 +215,8 @@ def generate_invoice_pdf(data: Dict[str, Any]) -> bytes:
         ]
         if gstin:
             block.append(Paragraph(f"GSTIN: <b>{gstin}</b>", s_party_detail))
-        if vehicle_no:
-            block.append(Paragraph(f"Vehicle No: <b>{vehicle_no}</b>", s_party_detail))
+        if veh:
+            block.append(Paragraph(f"Vehicle No: <b>{veh}</b>", s_party_detail))
         return block
 
     bill_block = party_block(
@@ -198,10 +230,9 @@ def generate_invoice_pdf(data: Dict[str, Any]) -> bytes:
         data.get("customer_name", ""),
         "",
         data.get("customer_shipping_address", "") or data.get("customer_billing_address", ""),
-        vehicle_no=data.get("vehicle_no")
+        veh=vehicle_no
     )
 
-    # Combine into a two-column layout
     addr_table = Table(
         [[bill_block, ship_block]],
         colWidths=[(PAGE_W - 2 * MARGIN) * 0.5, (PAGE_W - 2 * MARGIN) * 0.5],
@@ -212,35 +243,27 @@ def generate_invoice_pdf(data: Dict[str, Any]) -> bytes:
         ("LEFTPADDING", (1, 0), (1, 0), 6),
     ]))
     story.append(addr_table)
-    story.append(HRFlowable(width="100%", thickness=0.5, color=SLATE_200,
-                             spaceBefore=3 * mm, spaceAfter=3 * mm))
+    story.append(HRFlowable(width="100%", thickness=0.5, color=SLATE_200, spaceBefore=3 * mm, spaceAfter=3 * mm))
 
     # ── ITEMS TABLE ─────────────────────────────────────────────────────────
     items = data.get("items", [])
     has_discount = any((item.get("discount_amount") or 0) > 0 for item in items)
 
-    th_style = ParagraphStyle("th", fontName="Helvetica-Bold", fontSize=8,
-                               textColor=WHITE, alignment=TA_CENTER)
-    td_style = ParagraphStyle("td", fontName=base_font, fontSize=8,
-                               textColor=SLATE_700, alignment=TA_CENTER)
-    td_left = ParagraphStyle("td_l", fontName=base_font, fontSize=8,
-                              textColor=SLATE_700, alignment=TA_LEFT)
-    td_right = ParagraphStyle("td_r", fontName=base_font, fontSize=8,
-                               textColor=SLATE_700, alignment=TA_RIGHT)
-    td_bold_right = ParagraphStyle("td_br", fontName="Helvetica-Bold", fontSize=8,
-                                    textColor=BLACK, alignment=TA_RIGHT)
+    th_style = ParagraphStyle("th", fontName="Helvetica-Bold", fontSize=8, textColor=WHITE, alignment=TA_CENTER)
+    td_style = ParagraphStyle("td", fontName=base_font, fontSize=8, textColor=SLATE_700, alignment=TA_CENTER)
+    td_left = ParagraphStyle("td_l", fontName=base_font, fontSize=8, textColor=SLATE_700, alignment=TA_LEFT)
+    td_right = ParagraphStyle("td_r", fontName=base_font, fontSize=8, textColor=SLATE_700, alignment=TA_RIGHT)
 
-    headers = ["S.No.", "Item Description", "HSN", "Qty", "Rate (₹)"]
+    headers = ["S.No.", "Item Description", "HSN", "Qty", "Rate (Rs.)"]
     if has_discount:
-        headers.append("Disc (₹)")
-    headers += ["GST %", "Amount (₹)"]
+        headers.append("Disc (Rs.)")
+    headers += ["GST %", "Amount (Rs.)"]
 
-    col_widths_base = [10 * mm, None, 18 * mm, 12 * mm, 20 * mm]
+    col_widths_base = [10 * mm, None, 18 * mm, 12 * mm, 22 * mm]
     if has_discount:
         col_widths_base.append(18 * mm)
-    col_widths_base += [14 * mm, 22 * mm]
+    col_widths_base += [14 * mm, 24 * mm]
 
-    # Distribute remaining width to "Item Description" column (index 1)
     fixed_total = sum(w for w in col_widths_base if w is not None)
     avail = PAGE_W - 2 * MARGIN - fixed_total
     col_widths = [avail if w is None else w for w in col_widths_base]
@@ -253,13 +276,13 @@ def generate_invoice_pdf(data: Dict[str, Any]) -> bytes:
             Paragraph(item.get("product_name") or "Unknown", td_left),
             Paragraph(item.get("hsn_code") or "N/A", td_style),
             Paragraph(str(item.get("qty", 0)), td_style),
-            Paragraph(f"{float(item.get('rate', 0)):.2f}", td_style),
+            Paragraph(f"{float(item.get('rate', 0)):,.2f}", td_style),
         ]
         if has_discount:
-            row.append(Paragraph(f"{float(item.get('discount_amount', 0)):.2f}", td_style))
+            row.append(Paragraph(f"{float(item.get('discount_amount', 0)):,.2f}", td_style))
         row += [
             Paragraph(f"{float(item.get('tax_rate', 0)):.0f}%", td_style),
-            Paragraph(f"{float(item.get('amount', 0)):.2f}", td_right),
+            Paragraph(f"{float(item.get('amount', 0)):,.2f}", td_right),
         ]
         table_data.append(row)
 
@@ -287,19 +310,18 @@ def generate_invoice_pdf(data: Dict[str, Any]) -> bytes:
 
     subtotal = float(data.get("subtotal") or 0)
     discount = float(data.get("discount_amount") or 0)
-    tax_amt = float(data.get("tax_amount") or 0)
     total = float(data.get("total_amount") or 0)
 
-    totals_rows = [["Subtotal:", f"₹{subtotal:.2f}"]]
+    totals_rows = [["Subtotal:", f"Rs. {subtotal:,.2f}"]]
     if discount > 0:
-        totals_rows.append(["Discount:", f"-₹{discount:.2f}"])
+        totals_rows.append(["Discount:", f"-Rs. {discount:,.2f}"])
     if cgst > 0:
-        totals_rows.append(["CGST:", f"₹{cgst:.2f}"])
+        totals_rows.append(["CGST:", f"Rs. {cgst:,.2f}"])
     if sgst > 0:
-        totals_rows.append(["SGST:", f"₹{sgst:.2f}"])
+        totals_rows.append(["SGST:", f"Rs. {sgst:,.2f}"])
     if igst > 0:
-        totals_rows.append(["IGST:", f"₹{igst:.2f}"])
-    totals_rows.append(["Grand Total:", f"₹{total:.2f}"])
+        totals_rows.append(["IGST:", f"Rs. {igst:,.2f}"])
+    totals_rows.append(["Grand Total:", f"Rs. {total:,.2f}"])
 
     terms_text = data.get("invoice_terms", "") or ""
     

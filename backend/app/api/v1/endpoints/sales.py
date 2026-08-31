@@ -206,6 +206,7 @@ async def email_invoice(
         "vehicle_no": invoice.vehicle_no,
         # Company
         "company_name": company.name if company else "ORBX Corporation",
+        "company_logo": company.logo if company else None,
         "company_address": company.address if company else "",
         "company_gstin": company.gstin if company else "",
         "company_email": company.email if company else "",
