@@ -476,11 +476,15 @@ async def send_invoice_email(
     msg.attach(part)
 
     # Send via async SMTP
+    use_tls = (smtp_port == 465)
+    start_tls = (smtp_port != 465)
+
     await aiosmtplib.send(
         msg,
         hostname=smtp_host,
         port=smtp_port or 587,
         username=smtp_user,
         password=smtp_password,
-        start_tls=True,
+        use_tls=use_tls,
+        start_tls=start_tls,
     )

@@ -135,6 +135,9 @@ async def test_smtp_configuration(
     )
     msg.attach(MIMEText(body, "plain"))
 
+    use_tls = (test_req.smtp_port == 465)
+    start_tls = (test_req.smtp_port != 465)
+
     try:
         await aiosmtplib.send(
             msg,
@@ -142,7 +145,8 @@ async def test_smtp_configuration(
             port=test_req.smtp_port,
             username=test_req.smtp_user,
             password=test_req.smtp_password,
-            start_tls=True,
+            use_tls=use_tls,
+            start_tls=start_tls,
         )
     except Exception as exc:
         raise HTTPException(

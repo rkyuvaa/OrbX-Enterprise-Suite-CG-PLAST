@@ -595,7 +595,7 @@ const Companies = () => {
         </DialogTitle>
         <DialogContent sx={{ pt: 3, pb: 1 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {testError && <Alert severity="error" sx={{ borderRadius: '8px' }}>{testError}</Alert>}
+            {testError && <Alert severity="error" sx={{ borderRadius: '8px', whiteSpace: 'pre-line' }}>{testError}</Alert>}
             {testSuccess && <Alert severity="success" sx={{ borderRadius: '8px' }}>{testSuccess}</Alert>}
             
             <Typography variant="body2" sx={{ color: '#94a3b8', mb: 1 }}>
