@@ -109,184 +109,22 @@ async def upload_company_logo(
     return company
 
 
-@router.get("/companies/{company_id}/google-auth-url")
-async def get_google_auth_url_endpoint(
-    company_id: UUID,
-    redirect_uri: str,
-    db: AsyncSession = Depends(deps.get_db),
-    current_user = Depends(deps.PermissionChecker("admin", "edit"))
-):
-    """Generate Google OAuth 2.0 authorization consent URL for connecting Gmail."""
-    from app.services.google_oauth_service import get_google_auth_url, GoogleOAuthError
-    try:
-        url = get_google_auth_url(str(company_id), redirect_uri=redirect_uri)
-        return {"auth_url": url}
-    except GoogleOAuthError as exc:
-        raise HTTPException(status_code=400, detail=exc.message)
-
-
-@router.post("/companies/{company_id}/google-auth-callback", response_model=CompanyOut)
-async def google_auth_callback_endpoint(
-    company_id: UUID,
-    payload: dict,
-    db: AsyncSession = Depends(deps.get_db),
-    current_user = Depends(deps.PermissionChecker("admin", "edit"))
-):
-    """Callback endpoint to exchange authorization code for Google OAuth tokens and save to company."""
-    from app.core.crypto import encrypt_token
-    from app.services.google_oauth_service import exchange_code_for_tokens, get_user_info, GoogleOAuthError
-
-    code = payload.get("code")
-    redirect_uri = payload.get("redirect_uri")
-    if not code:
-        raise HTTPException(status_code=400, detail="Missing authorization code.")
-
-    try:
-        token_data = await exchange_code_for_tokens(code, redirect_uri=redirect_uri)
-        access_token = token_data.get("access_token")
-        refresh_token = token_data.get("refresh_token")
-        expires_in = token_data.get("expires_in")
-
-        user_info = await get_user_info(access_token)
-        connected_email = user_info.get("email")
-
-        if not connected_email:
-            raise HTTPException(status_code=400, detail="Failed to retrieve email address from Google Account.")
-
-        company = await AdminService.get_company(db, company_id)
-        company.email_provider = "gmail_oauth"
-        company.google_connected_email = connected_email
-        company.email_from = connected_email
-        company.google_access_token = encrypt_token(access_token)
-        if refresh_token:
-            company.google_refresh_token = encrypt_token(refresh_token)
-
-        db.add(company)
-        await db.commit()
-        await db.refresh(company)
-        return company
-
-    except GoogleOAuthError as exc:
-        raise HTTPException(status_code=400, detail=f"Google OAuth Error [{exc.error_type}]: {exc.message}")
-    except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Failed to complete Google OAuth connection: {exc}")
-
-
-@router.post("/companies/{company_id}/google-disconnect", response_model=CompanyOut)
-async def google_disconnect_endpoint(
-    company_id: UUID,
-    db: AsyncSession = Depends(deps.get_db),
-    current_user = Depends(deps.PermissionChecker("admin", "edit"))
-):
-    """Disconnect Google OAuth integration and revert company provider to SMTP."""
-    company = await AdminService.get_company(db, company_id)
-    company.email_provider = "smtp"
-    company.google_connected_email = None
-    company.google_refresh_token = None
-    company.google_access_token = None
-    company.google_token_expiry = None
-
-    db.add(company)
-    await db.commit()
-    await db.refresh(company)
-    return company
-
-
 @router.post("/companies/test-email")
-async def test_email_configuration(
+async def test_smtp_configuration(
     test_req: SmtpTestRequest,
-    db: AsyncSession = Depends(deps.get_db),
     current_user = Depends(deps.PermissionChecker("admin", "edit"))
 ):
     """
-    Test Email Connection (supports both Google OAuth 2.0 and Custom SMTP).
+    Test the SMTP configuration by sending a simple text email.
     """
-    provider = test_req.email_provider or "smtp"
-
-    if provider == "gmail_oauth":
-        from app.core.crypto import decrypt_token, encrypt_token
-        from app.services.google_oauth_service import (
-            send_email_via_gmail_api,
-            refresh_access_token,
-            GoogleOAuthError,
-        )
-
-        if not test_req.company_id:
-            raise HTTPException(status_code=400, detail="Company ID is required to test Google OAuth connection.")
-
-        company = await AdminService.get_company(db, test_req.company_id)
-        refresh_token = decrypt_token(company.google_refresh_token)
-        access_token = decrypt_token(company.google_access_token)
-        from_email = company.google_connected_email or company.email_from
-
-        if not company.google_connected:
-            raise HTTPException(
-                status_code=400,
-                detail="Google account is not connected. Please click 'Connect Google Account' first."
-            )
-
-        test_subject = "Email Connection Test — ORBX ERP (Google OAuth)"
-        test_body = (
-            "Hello,\n\n"
-            "This is a test email from ORBX ERP sent via official Google OAuth 2.0 and Gmail API.\n\n"
-            "If you received this email, your Google Account email connection is working perfectly!\n\n"
-            "Regards,\n"
-            "ORBX ERP System"
-        )
-
-        try:
-            if access_token:
-                await send_email_via_gmail_api(
-                    access_token=access_token,
-                    to_email=test_req.recipient_email,
-                    subject=test_subject,
-                    body=test_body,
-                    from_email=from_email,
-                )
-                return {"message": f"Test email sent successfully via Google OAuth 2.0 to {test_req.recipient_email}"}
-        except GoogleOAuthError as err:
-            if err.error_type != "token_expired_or_revoked" or not refresh_token:
-                raise HTTPException(status_code=400, detail=f"[{err.error_type.upper()}] {err.message}")
-
-        # Attempt token refresh
-        if refresh_token:
-            try:
-                token_resp = await refresh_access_token(refresh_token)
-                new_access_token = token_resp.get("access_token")
-                company.google_access_token = encrypt_token(new_access_token)
-                db.add(company)
-                await db.commit()
-
-                await send_email_via_gmail_api(
-                    access_token=new_access_token,
-                    to_email=test_req.recipient_email,
-                    subject=test_subject,
-                    body=test_body,
-                    from_email=from_email,
-                )
-                return {"message": f"Test email sent successfully via Google OAuth 2.0 to {test_req.recipient_email}"}
-            except GoogleOAuthError as err:
-                raise HTTPException(status_code=400, detail=f"[{err.error_type.upper()}] {err.message}")
-            except Exception as exc:
-                raise HTTPException(status_code=400, detail=f"[TOKEN_EXPIRED_OR_REVOKED] Token refresh failed: {exc}")
-
-        raise HTTPException(
-            status_code=400,
-            detail="[TOKEN_EXPIRED_OR_REVOKED] Access token expired and no valid refresh token found. Please reconnect Google Account."
-        )
-
-    # Standard SMTP Test Flow
     import aiosmtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
 
-    if not test_req.smtp_host or not test_req.smtp_port or not test_req.smtp_user:
-        raise HTTPException(status_code=400, detail="Missing required SMTP credentials (host, port, username).")
-
     msg = MIMEMultipart()
-    msg["From"] = test_req.email_from or test_req.smtp_user
+    msg["From"] = test_req.email_from
     msg["To"] = test_req.recipient_email
-    msg["Subject"] = "SMTP Connection Test — ORBX ERP"
+    msg["Subject"] = "SMTP Configuration Test — ORBX ERP"
     
     body = (
         "Hello,\n\n"
@@ -306,19 +144,14 @@ async def test_email_configuration(
             hostname=test_req.smtp_host,
             port=test_req.smtp_port,
             username=test_req.smtp_user,
-            password=test_req.smtp_password or "",
+            password=test_req.smtp_password,
             use_tls=use_tls,
             start_tls=start_tls,
-        )
-    except aiosmtplib.SMTPAuthenticationError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail=f"[AUTHENTICATION_FAILURE] SMTP Authentication failed: {exc}"
         )
     except Exception as exc:
         raise HTTPException(
             status_code=400,
-            detail=f"[SMTP_FAILURE] SMTP connection/delivery failed: {exc}"
+            detail=f"SMTP connection/delivery failed: {exc}"
         )
 
     return {"message": f"Test email sent successfully to {test_req.recipient_email}"}

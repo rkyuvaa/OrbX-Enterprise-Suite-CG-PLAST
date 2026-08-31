@@ -436,67 +436,7 @@ async def send_invoice_email(
     Raises RuntimeError if SMTP credentials are not configured.
     Raises aiosmtplib.SMTPException on delivery failure.
     """
-    # Check provider type
-    provider = (smtp_settings or {}).get("email_provider") or "smtp"
-
-    if provider == "gmail_oauth":
-        from app.core.crypto import decrypt_token, encrypt_token
-        from app.services.google_oauth_service import (
-            send_email_via_gmail_api,
-            refresh_access_token,
-            GoogleOAuthError,
-        )
-
-        refresh_token = decrypt_token((smtp_settings or {}).get("google_refresh_token"))
-        access_token = decrypt_token((smtp_settings or {}).get("google_access_token"))
-        from_email = (smtp_settings or {}).get("google_connected_email") or (smtp_settings or {}).get("email_from")
-
-        if not refresh_token and not access_token:
-            raise RuntimeError("Google account is not connected. Please connect your Google account in Company Configuration.")
-
-        try:
-            if access_token:
-                await send_email_via_gmail_api(
-                    access_token=access_token,
-                    to_email=to_email,
-                    subject=subject,
-                    body=body,
-                    pdf_bytes=pdf_bytes,
-                    filename=filename,
-                    from_email=from_email,
-                )
-                return
-        except GoogleOAuthError as err:
-            if err.error_type != "token_expired_or_revoked" or not refresh_token:
-                raise
-
-        # Access token expired or rejected, refresh access token
-        if refresh_token:
-            token_resp = await refresh_access_token(refresh_token)
-            new_access_token = token_resp.get("access_token")
-            if not new_access_token:
-                raise RuntimeError("Failed to refresh Google OAuth access token.")
-
-            # Update in memory / DB if company object passed
-            company = (smtp_settings or {}).get("company")
-            db = (smtp_settings or {}).get("db")
-            if company:
-                company.google_access_token = encrypt_token(new_access_token)
-                if db:
-                    await db.commit()
-
-            await send_email_via_gmail_api(
-                access_token=new_access_token,
-                to_email=to_email,
-                subject=subject,
-                body=body,
-                pdf_bytes=pdf_bytes,
-                filename=filename,
-                from_email=from_email,
-            )
-            return
-
-    # Fall back to SMTP
+    # Fall back to settings if not provided in smtp_settings dict
     smtp_host = (smtp_settings or {}).get("smtp_host") or settings.SMTP_HOST
     smtp_port = (smtp_settings or {}).get("smtp_port") or settings.SMTP_PORT
     smtp_user = (smtp_settings or {}).get("smtp_user") or settings.SMTP_USER
@@ -526,15 +466,14 @@ async def send_invoice_email(
     msg.attach(MIMEText(body, "plain"))
 
     # PDF attachment
-    if pdf_bytes:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(pdf_bytes)
-        encoders.encode_base64(part)
-        part.add_header(
-            "Content-Disposition",
-            f'attachment; filename="{filename}"',
-        )
-        msg.attach(part)
+    part = MIMEBase("application", "octet-stream")
+    part.set_payload(pdf_bytes)
+    encoders.encode_base64(part)
+    part.add_header(
+        "Content-Disposition",
+        f"attachment; filename=\"{filename}\"",
+    )
+    msg.attach(part)
 
     # Send via async SMTP
     use_tls = (smtp_port == 465)

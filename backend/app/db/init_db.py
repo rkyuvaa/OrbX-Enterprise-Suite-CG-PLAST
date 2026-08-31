@@ -11,24 +11,7 @@ from app.models.product import Product, ProductCategory
 from app.models.recycling import Recipe, RecipeItem
 
 
-from sqlalchemy import text
-
-
 async def init_db(db: AsyncSession) -> None:
-    # 0. Ensure Google OAuth columns exist on companies table
-    for col_name, col_type in [
-        ("email_provider", "VARCHAR(50) DEFAULT 'smtp'"),
-        ("google_connected_email", "VARCHAR(255)"),
-        ("google_refresh_token", "VARCHAR(1000)"),
-        ("google_access_token", "VARCHAR(1000)"),
-        ("google_token_expiry", "VARCHAR(50)"),
-    ]:
-        try:
-            await db.execute(text(f"ALTER TABLE companies ADD COLUMN {col_name} {col_type}"))
-            await db.commit()
-        except Exception:
-            await db.rollback()
-
     # 1. Create Default Company
     query_company = await db.execute(
         select(Company).filter(

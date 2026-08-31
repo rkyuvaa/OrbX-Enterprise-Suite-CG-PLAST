@@ -56,8 +56,7 @@ class Company(Base):
     bank_ifsc_code: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
     bank_branch_location: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
-    # SMTP / Email Configuration Settings
-    email_provider: Mapped[str] = mapped_column(String(50), default="smtp")  # "smtp" or "gmail_oauth"
+    # SMTP Configuration Settings
     smtp_host: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     smtp_port: Mapped[Optional[int]] = mapped_column(nullable=True)
     smtp_user: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -65,21 +64,6 @@ class Company(Base):
     email_from: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     email_subject_template: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     email_body_template: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
-
-    # Google OAuth 2.0 Credentials (encrypted at rest)
-    google_connected_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    google_refresh_token: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
-    google_access_token: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
-    google_token_expiry: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-
-    @property
-    def google_connected(self) -> bool:
-        return bool(self.google_connected_email and (self.google_refresh_token or self.google_access_token))
-
-    @property
-    def google_client_id_configured(self) -> bool:
-        from app.core.config import settings
-        return bool(settings.GOOGLE_CLIENT_ID)
 
     # Relationships
     users: Mapped[List["User"]] = relationship(
