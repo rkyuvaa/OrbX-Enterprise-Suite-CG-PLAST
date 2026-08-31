@@ -46,7 +46,8 @@ class CompanyCreate(BaseModel):
     bank_ifsc_code: Optional[str] = None
     bank_branch_location: Optional[str] = None
 
-    # SMTP Configuration Settings
+    # SMTP / Email Configuration Settings
+    email_provider: Optional[str] = "smtp"
     smtp_host: Optional[str] = None
     smtp_port: Optional[int] = None
     smtp_user: Optional[str] = None
@@ -97,7 +98,8 @@ class CompanyOut(BaseModel):
     bank_ifsc_code: Optional[str] = None
     bank_branch_location: Optional[str] = None
 
-    # SMTP Configuration Settings
+    # SMTP / Email Configuration Settings
+    email_provider: Optional[str] = "smtp"
     smtp_host: Optional[str] = None
     smtp_port: Optional[int] = None
     smtp_user: Optional[str] = None
@@ -105,6 +107,12 @@ class CompanyOut(BaseModel):
     email_from: Optional[str] = None
     email_subject_template: Optional[str] = None
     email_body_template: Optional[str] = None
+
+    # Google OAuth Status (tokens excluded for security)
+    google_connected_email: Optional[str] = None
+    google_connected: bool = False
+    google_client_id_configured: bool = False
+
     is_active: bool
 
     class Config:
@@ -151,7 +159,8 @@ class CompanyUpdate(BaseModel):
     bank_ifsc_code: Optional[str] = None
     bank_branch_location: Optional[str] = None
 
-    # SMTP Configuration Settings
+    # SMTP / Email Configuration Settings
+    email_provider: Optional[str] = None
     smtp_host: Optional[str] = None
     smtp_port: Optional[int] = None
     smtp_user: Optional[str] = None
@@ -219,9 +228,11 @@ class RoleOut(BaseModel):
 
 
 class SmtpTestRequest(BaseModel):
-    smtp_host: str
-    smtp_port: int
-    smtp_user: str
-    smtp_password: str
-    email_from: str
+    email_provider: Optional[str] = "smtp"
+    company_id: Optional[UUID] = None
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = None
+    smtp_user: Optional[str] = None
+    smtp_password: Optional[str] = None
+    email_from: Optional[str] = None
     recipient_email: EmailStr

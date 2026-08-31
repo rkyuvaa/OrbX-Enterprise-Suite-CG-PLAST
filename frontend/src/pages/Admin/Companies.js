@@ -6,7 +6,10 @@ import {
   Button, Box, Alert, Typography, Divider, MenuItem, TextField, Grid,
   Dialog, DialogTitle, DialogContent, DialogActions, Paper, Tabs, Tab
 } from '@mui/material';
-import { Add as AddIcon, Save as SaveIcon, CloudUpload as UploadIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { 
+  Add as AddIcon, Save as SaveIcon, CloudUpload as UploadIcon, Delete as DeleteIcon,
+  Google as GoogleIcon, CheckCircle as CheckCircleIcon, LinkOff as LinkOffIcon, Mail as MailIcon
+} from '@mui/icons-material';
 
 import apiClient from '../../api/client';
 import PageHeader from '../../components/PageHeader';
@@ -30,7 +33,8 @@ const schema = yup.object().shape({
   bank_ifsc_code: yup.string().nullable(),
   bank_branch_location: yup.string().nullable(),
   
-  // SMTP credentials
+  // Email & Provider config
+  email_provider: yup.string().default('smtp'),
   smtp_host: yup.string().nullable(),
   smtp_port: yup.number().nullable().transform((value) => (isNaN(value) ? null : value)).typeError('SMTP Port must be a number'),
   smtp_user: yup.string().nullable(),
@@ -76,35 +80,118 @@ const Companies = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  // SMTP test state variables
+  // Email / Google OAuth state
+  const [connectingGoogle, setConnectingGoogle] = useState(false);
+  const [googleStatusMsg, setGoogleStatusMsg] = useState(null);
+
+  // Email test state variables
   const [openTestModal, setOpenTestModal] = useState(false);
   const [testRecipient, setTestRecipient] = useState('');
   const [testingSmtp, setTestingSmtp] = useState(false);
   const [testSuccess, setTestSuccess] = useState(null);
   const [testError, setTestError] = useState(null);
 
-  const { control, handleSubmit, reset, getValues } = useForm({
+  const { control, handleSubmit, reset, getValues, setValue, watch } = useForm({
     resolver: yupResolver(schema),
+    defaultValues: {
+      email_provider: 'smtp',
+    }
   });
+
+  const selectedEmailProvider = watch('email_provider') || 'smtp';
 
   const loadCompanies = async () => {
     try {
       const res = await apiClient.get('/admin/companies');
       setCompanies(res.data);
+      return res.data;
     } catch (err) {
       setError('Failed to load companies list.');
     }
   };
 
+  // Handle Google OAuth Callback redirect params if present
   useEffect(() => {
-    loadCompanies();
+    const handleOAuthCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const companyId = urlParams.get('state');
+
+      if (code && companyId) {
+        try {
+          setGoogleStatusMsg('Completing Google OAuth authentication...');
+          const redirectUri = `${window.location.origin}/admin/company`;
+          const res = await apiClient.post(`/admin/companies/${companyId}/google-auth-callback`, {
+            code,
+            redirect_uri: redirectUri,
+          });
+
+          // Clean up URL search params without reload
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          setGoogleStatusMsg(`Successfully connected Google account (${res.data.google_connected_email})!`);
+          const updatedList = await loadCompanies();
+          const target = updatedList?.find((c) => c.id === companyId) || res.data;
+          handleOpenEdit(target);
+        } catch (err) {
+          setGoogleStatusMsg(`OAuth Connection Error: ${err.response?.data?.detail || err.message}`);
+        }
+      } else {
+        loadCompanies();
+      }
+    };
+
+    handleOAuthCallback();
   }, []);
+
+  const handleConnectGoogle = async () => {
+    if (!selectedCompany?.id) {
+      setError('Please save the company profile first before connecting a Google account.');
+      return;
+    }
+    try {
+      setConnectingGoogle(true);
+      setGoogleStatusMsg(null);
+      const redirectUri = `${window.location.origin}/admin/company`;
+      const res = await apiClient.get(
+        `/admin/companies/${selectedCompany.id}/google-auth-url?redirect_uri=${encodeURIComponent(redirectUri)}`
+      );
+
+      if (res.data?.auth_url) {
+        // Redirect to Google's official OAuth consent page
+        window.location.href = res.data.auth_url;
+      }
+    } catch (err) {
+      setGoogleStatusMsg(`Failed to initiate Google OAuth: ${err.response?.data?.detail || err.message}`);
+    } finally {
+      setConnectingGoogle(false);
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    if (!selectedCompany?.id) return;
+    try {
+      setConnectingGoogle(true);
+      setGoogleStatusMsg(null);
+      const res = await apiClient.post(`/admin/companies/${selectedCompany.id}/google-disconnect`);
+      setGoogleStatusMsg('Disconnected Google account.');
+      setSelectedCompany(res.data);
+      setValue('email_provider', 'smtp');
+      setValue('google_connected_email', '');
+      loadCompanies();
+    } catch (err) {
+      setGoogleStatusMsg(`Failed to disconnect Google account: ${err.response?.data?.detail || err.message}`);
+    } finally {
+      setConnectingGoogle(false);
+    }
+  };
 
   const handleOpenAdd = () => {
     setSelectedCompany(null);
     setLogoUrl('');
     setLogoFile(null);
     setModalTab(0);
+    setGoogleStatusMsg(null);
     reset({
       name: '',
       code: '',
@@ -118,6 +205,7 @@ const Companies = () => {
       bank_account_no: '',
       bank_ifsc_code: '',
       bank_branch_location: '',
+      email_provider: 'smtp',
       smtp_host: '',
       smtp_port: 587,
       smtp_user: '',
@@ -154,7 +242,11 @@ const Companies = () => {
     setLogoUrl(comp.logo || '');
     setLogoFile(null);
     setModalTab(0);
-    reset(comp);
+    setGoogleStatusMsg(null);
+    reset({
+      ...comp,
+      email_provider: comp.email_provider || (comp.google_connected ? 'gmail_oauth' : 'smtp'),
+    });
     setOpenModal(true);
   };
 
@@ -197,8 +289,9 @@ const Companies = () => {
 
   const handleTestSmtp = () => {
     const values = getValues();
-    if (!values.smtp_host || !values.smtp_user || !values.smtp_password || !values.email_from) {
-      setError('Please fill in SMTP Host, Username, Password, and Sender Email to run the test.');
+    const provider = values.email_provider || 'smtp';
+    if (provider === 'smtp' && (!values.smtp_host || !values.smtp_user)) {
+      setError('Please fill in SMTP Host and Username to test custom SMTP.');
       return;
     }
     setTestSuccess(null);
@@ -214,7 +307,10 @@ const Companies = () => {
     setTestError(null);
     try {
       const values = getValues();
+      const provider = values.email_provider || 'smtp';
       await apiClient.post('/admin/companies/test-email', {
+        email_provider: provider,
+        company_id: selectedCompany?.id,
         smtp_host: values.smtp_host,
         smtp_port: parseInt(values.smtp_port) || 587,
         smtp_user: values.smtp_user,
@@ -224,7 +320,7 @@ const Companies = () => {
       });
       setTestSuccess(`Test email sent successfully to ${testRecipient}!`);
     } catch (err) {
-      setTestError(err.response?.data?.detail || 'SMTP connection/delivery failed.');
+      setTestError(err.response?.data?.detail || 'Email connection test failed.');
     } finally {
       setTestingSmtp(false);
     }
@@ -544,24 +640,124 @@ const Companies = () => {
           {/* Tab 3: SMTP Email config */}
           <Box sx={{ display: modalTab === 3 ? 'block' : 'none' }}>
             <Typography variant="subtitle1" color="primary.main" sx={{ fontWeight: 700, mb: 1 }}>
-              SMTP Email Configurations
+              Email & Mail Delivery Configuration
             </Typography>
             <Divider sx={{ mb: 2 }} />
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2 }}>
-              <FormInput name="smtp_host" control={control} label="SMTP Server Host" />
-              <FormInput name="smtp_port" control={control} label="SMTP Port" type="number" />
-              <FormInput name="smtp_user" control={control} label="SMTP Username" />
-              <FormInput name="smtp_password" control={control} label="SMTP Password" type="password" />
-              <Box sx={{ gridColumn: 'span 2' }}>
-                <FormInput name="email_from" control={control} label="Email Sender (From Address)" />
-              </Box>
+
+            {googleStatusMsg && (
+              <Alert 
+                severity={googleStatusMsg.includes('Error') || googleStatusMsg.includes('Failed') ? 'error' : 'info'} 
+                sx={{ mb: 2, borderRadius: '8px' }}
+                onClose={() => setGoogleStatusMsg(null)}
+              >
+                {googleStatusMsg}
+              </Alert>
+            )}
+
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" sx={{ color: '#94a3b8', mb: 1, fontWeight: 600 }}>
+                Email Provider / Authentication Type
+              </Typography>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Email Provider"
+                value={selectedEmailProvider}
+                onChange={(e) => setValue('email_provider', e.target.value)}
+                sx={{
+                  '& .MuiOutlinedInput-root': { color: '#f1f5f9' },
+                  '& .MuiInputLabel-root': { color: '#94a3b8' }
+                }}
+              >
+                <MenuItem value="gmail_oauth">Gmail / Google Workspace (Official OAuth 2.0 - Recommended)</MenuItem>
+                <MenuItem value="smtp">Custom SMTP (Username & Password)</MenuItem>
+              </TextField>
             </Box>
 
-            <Box sx={{ display: 'flex', mb: 3 }}>
-              <Button variant="outlined" color="secondary" onClick={handleTestSmtp} size="small">
-                Test SMTP Credentials
-              </Button>
-            </Box>
+            {/* Provider Mode 1: Gmail / Google Workspace (OAuth 2.0) */}
+            {selectedEmailProvider === 'gmail_oauth' && (
+              <Box sx={{ p: 2.5, mb: 3, borderRadius: '10px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                {selectedCompany?.google_connected ? (
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                      <CheckCircleIcon sx={{ color: '#10b981', mr: 1, fontSize: 24 }} />
+                      <Typography variant="h6" sx={{ color: '#10b981', fontWeight: 600, fontSize: '1rem' }}>
+                        Gmail Account Connected
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#cbd5e1', mb: 2 }}>
+                      Connected Email: <strong>{selectedCompany.google_connected_email}</strong>
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={handleTestSmtp}
+                        startIcon={<MailIcon />}
+                      >
+                        Test Email Connection
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={handleDisconnectGoogle}
+                        disabled={connectingGoogle}
+                        startIcon={<LinkOffIcon />}
+                      >
+                        Disconnect
+                      </Button>
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ color: '#f1f5f9', fontWeight: 600, mb: 0.5 }}>
+                      Connect via Google OAuth 2.0
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#94a3b8', mb: 2 }}>
+                      Connect your Gmail or Google Workspace account securely using Google's official authorization screen. No App Passwords or regular passwords required.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      onClick={handleConnectGoogle}
+                      disabled={connectingGoogle}
+                      startIcon={<GoogleIcon />}
+                      sx={{
+                        background: '#ea4335',
+                        '&:hover': { background: '#d93025' },
+                        fontWeight: 600,
+                        textTransform: 'none',
+                      }}
+                    >
+                      {connectingGoogle ? 'Initiating OAuth...' : 'Connect Google Account'}
+                    </Button>
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {/* Provider Mode 2: Custom SMTP */}
+            {selectedEmailProvider === 'smtp' && (
+              <Box>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2 }}>
+                  <FormInput name="smtp_host" control={control} label="SMTP Server Host" />
+                  <FormInput name="smtp_port" control={control} label="SMTP Port" type="number" />
+                  <FormInput name="smtp_user" control={control} label="SMTP Username" />
+                  <FormInput name="smtp_password" control={control} label="SMTP Password" type="password" />
+                  <Box sx={{ gridColumn: 'span 2' }}>
+                    <FormInput name="email_from" control={control} label="Email Sender (From Address)" />
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: 'flex', mb: 3 }}>
+                  <Button variant="outlined" color="secondary" onClick={handleTestSmtp} size="small" startIcon={<MailIcon />}>
+                    Test Email Connection
+                  </Button>
+                </Box>
+              </Box>
+            )}
 
             <Typography variant="subtitle1" color="primary.main" sx={{ fontWeight: 700, mb: 1 }}>
               Email Templates
@@ -575,7 +771,7 @@ const Companies = () => {
         </form>
       </CommonModal>
 
-      {/* SMTP CONNECTION TEST MODAL */}
+      {/* EMAIL CONNECTION TEST MODAL */}
       <Dialog
         open={openTestModal}
         onClose={() => !testingSmtp && setOpenTestModal(false)}
@@ -591,7 +787,7 @@ const Companies = () => {
         }}
       >
         <DialogTitle sx={{ borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 2, color: '#f1f5f9', fontWeight: 600 }}>
-          Test SMTP Connection
+          Test Email Connection
         </DialogTitle>
         <DialogContent sx={{ pt: 3, pb: 1 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -599,7 +795,7 @@ const Companies = () => {
             {testSuccess && <Alert severity="success" sx={{ borderRadius: '8px' }}>{testSuccess}</Alert>}
             
             <Typography variant="body2" sx={{ color: '#94a3b8', mb: 1 }}>
-              Enter a recipient email address to send a test message using your current SMTP form configurations.
+              Enter a recipient email address to send a test message using your current <strong>{selectedEmailProvider === 'gmail_oauth' ? 'Gmail OAuth 2.0' : 'Custom SMTP'}</strong> configurations.
             </Typography>
             
             <TextField
@@ -635,7 +831,7 @@ const Companies = () => {
               '&:hover': { background: 'linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)' }
             }}
           >
-            {testingSmtp ? 'Testing...' : 'Send Test Email'}
+            {testingSmtp ? 'Testing...' : 'Test Email Connection'}
           </Button>
         </DialogActions>
       </Dialog>
