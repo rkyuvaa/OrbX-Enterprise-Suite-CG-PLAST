@@ -1493,20 +1493,20 @@ const Sales = () => {
         PaperProps={{
           sx: {
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
+            background: '#ffffff',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.12)',
+            border: '1px solid #e2e8f0'
           }
         }}
       >
         <DialogTitle
           sx={{
             display: 'flex', alignItems: 'center', gap: 1.5,
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-            pb: 2, color: '#f1f5f9'
+            borderBottom: '1px solid #f1f5f9',
+            pb: 2, color: '#0f172a', fontWeight: 600
           }}
         >
-          <EmailIcon sx={{ color: '#818cf8' }} />
+          <EmailIcon sx={{ color: '#1b4332' }} />
           Email Tax Invoice
         </DialogTitle>
         <DialogContent sx={{ pt: 3, pb: 1 }}>
@@ -1521,9 +1521,9 @@ const Sales = () => {
               placeholder="customer@example.com"
               helperText={!emailTo ? "⚠ Customer has no email on record — please enter one" : ""}
               sx={{
-                '& .MuiOutlinedInput-root': { color: '#f1f5f9', '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' } },
-                '& .MuiInputLabel-root': { color: '#94a3b8' },
-                '& .MuiFormHelperText-root': { color: '#f59e0b' }
+                '& .MuiOutlinedInput-root': { color: '#0f172a' },
+                '& .MuiInputLabel-root': { color: '#64748b' },
+                '& .MuiFormHelperText-root': { color: '#d97706', fontWeight: 600 }
               }}
             />
             <TextField
@@ -1534,8 +1534,8 @@ const Sales = () => {
               value={emailSubject}
               onChange={(e) => setEmailSubject(e.target.value)}
               sx={{
-                '& .MuiOutlinedInput-root': { color: '#f1f5f9', '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' } },
-                '& .MuiInputLabel-root': { color: '#94a3b8' }
+                '& .MuiOutlinedInput-root': { color: '#0f172a' },
+                '& .MuiInputLabel-root': { color: '#64748b' }
               }}
             />
             <TextField
@@ -1547,31 +1547,31 @@ const Sales = () => {
               value={emailBody}
               onChange={(e) => setEmailBody(e.target.value)}
               sx={{
-                '& .MuiOutlinedInput-root': { color: '#f1f5f9', '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' } },
-                '& .MuiInputLabel-root': { color: '#94a3b8' }
+                '& .MuiOutlinedInput-root': { color: '#0f172a' },
+                '& .MuiInputLabel-root': { color: '#64748b' }
               }}
             />
             <Box
               sx={{
                 display: 'flex', alignItems: 'center', gap: 1,
                 p: 1.5, borderRadius: '8px',
-                background: 'rgba(99, 102, 241, 0.08)',
-                border: '1px solid rgba(99, 102, 241, 0.2)'
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0'
               }}
             >
-              <EmailIcon sx={{ fontSize: 16, color: '#818cf8' }} />
-              <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-                A PDF copy of <strong style={{ color: '#c7d2fe' }}>{selectedInvoice?.invoice_number}</strong> will be attached automatically.
+              <EmailIcon sx={{ fontSize: 16, color: '#166534' }} />
+              <Typography variant="caption" sx={{ color: '#166534', fontWeight: 500 }}>
+                A PDF copy of <strong style={{ color: '#14532d' }}>{selectedInvoice?.invoice_number}</strong> will be attached automatically.
               </Typography>
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, gap: 1 }}>
+        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, gap: 1, borderTop: '1px solid #f1f5f9' }}>
           <Button
             onClick={() => setOpenEmailModal(false)}
             disabled={emailSending}
             variant="outlined"
-            sx={{ color: '#94a3b8', borderColor: 'rgba(255,255,255,0.15)' }}
+            sx={{ color: '#475569', borderColor: '#cbd5e1', '&:hover': { borderColor: '#94a3b8', background: '#f8fafc' } }}
           >
             Cancel
           </Button>
@@ -1582,9 +1582,9 @@ const Sales = () => {
             variant="contained"
             startIcon={emailSending ? <CircularProgress size={16} color="inherit" /> : <EmailIcon />}
             sx={{
-              background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
-              '&:hover': { background: 'linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)' },
-              '&:disabled': { opacity: 0.5 }
+              background: 'linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%)',
+              '&:hover': { background: 'linear-gradient(135deg, #143225 0%, #1b4332 100%)' },
+              fontWeight: 600
             }}
           >
             {emailSending ? 'Sending…' : 'Send Invoice'}

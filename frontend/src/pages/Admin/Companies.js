@@ -584,13 +584,13 @@ const Companies = () => {
         PaperProps={{
           sx: {
             borderRadius: '12px',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
+            background: '#ffffff',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.12)',
+            border: '1px solid #e2e8f0'
           }
         }}
       >
-        <DialogTitle sx={{ borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 2, color: '#f1f5f9', fontWeight: 600 }}>
+        <DialogTitle sx={{ borderBottom: '1px solid #f1f5f9', pb: 2, color: '#0f172a', fontWeight: 600 }}>
           Test SMTP Connection
         </DialogTitle>
         <DialogContent sx={{ pt: 3, pb: 1 }}>
@@ -598,7 +598,7 @@ const Companies = () => {
             {testError && <Alert severity="error" sx={{ borderRadius: '8px', whiteSpace: 'pre-line' }}>{testError}</Alert>}
             {testSuccess && <Alert severity="success" sx={{ borderRadius: '8px' }}>{testSuccess}</Alert>}
             
-            <Typography variant="body2" sx={{ color: '#94a3b8', mb: 1 }}>
+            <Typography variant="body2" sx={{ color: '#64748b', mb: 1 }}>
               Enter a recipient email address to send a test message using your current SMTP form configurations.
             </Typography>
             
@@ -611,18 +611,18 @@ const Companies = () => {
               onChange={(e) => setTestRecipient(e.target.value)}
               placeholder="test@example.com"
               sx={{
-                '& .MuiOutlinedInput-root': { color: '#f1f5f9', '& fieldset': { borderColor: 'rgba(255,255,255,0.15)' } },
-                '& .MuiInputLabel-root': { color: '#94a3b8' }
+                '& .MuiOutlinedInput-root': { color: '#0f172a' },
+                '& .MuiInputLabel-root': { color: '#64748b' }
               }}
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, gap: 1 }}>
+        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1, gap: 1, borderTop: '1px solid #f1f5f9' }}>
           <Button
             onClick={() => setOpenTestModal(false)}
             disabled={testingSmtp}
             variant="outlined"
-            sx={{ color: '#94a3b8', borderColor: 'rgba(255,255,255,0.15)' }}
+            sx={{ color: '#475569', borderColor: '#cbd5e1', '&:hover': { borderColor: '#94a3b8', background: '#f8fafc' } }}
           >
             Close
           </Button>
@@ -631,8 +631,9 @@ const Companies = () => {
             disabled={testingSmtp || !testRecipient}
             variant="contained"
             sx={{
-              background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
-              '&:hover': { background: 'linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)' }
+              background: 'linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%)',
+              '&:hover': { background: 'linear-gradient(135deg, #143225 0%, #1b4332 100%)' },
+              fontWeight: 600
             }}
           >
             {testingSmtp ? 'Testing...' : 'Send Test Email'}
