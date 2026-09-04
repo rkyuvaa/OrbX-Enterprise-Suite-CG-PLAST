@@ -8,7 +8,7 @@ from sqlalchemy import func, and_
 
 from app.models.business import Customer, Supplier, Company
 from app.models.product import Product, ProductCategory
-from app.models.purchase import PurchaseOrder, PurchaseEntry
+from app.models.purchase import PurchaseOrder, GRN, PurchaseEntry
 from app.models.inventory import CurrentStock, StockTransaction
 from app.models.sales import SalesOrder, Invoice, InvoiceItem
 from app.models.finance import Payment, VendorPayment
@@ -348,7 +348,11 @@ class ReportService:
                 pass
 
         # 2. Fetch Bills (PurchaseEntry)
-        stmt_bills = select(PurchaseEntry).filter(PurchaseEntry.supplier_id == supplier_id, PurchaseEntry.status != "Cancelled")
+        stmt_bills = (
+            select(PurchaseEntry)
+            .filter(PurchaseEntry.supplier_id == supplier_id, PurchaseEntry.status != "Cancelled")
+            .options(selectinload(PurchaseEntry.grn).selectinload(GRN.purchase_order))
+        )
         if company_id:
             stmt_bills = stmt_bills.filter(PurchaseEntry.company_id == company_id)
         if start_dt:
@@ -359,7 +363,11 @@ class ReportService:
         bills = q_bills.scalars().all()
 
         # 3. Fetch Payments (VendorPayment)
-        stmt_payments = select(VendorPayment).filter(VendorPayment.supplier_id == supplier_id).options(selectinload(VendorPayment.purchase_entry))
+        stmt_payments = (
+            select(VendorPayment)
+            .filter(VendorPayment.supplier_id == supplier_id)
+            .options(selectinload(VendorPayment.purchase_entry).selectinload(PurchaseEntry.grn).selectinload(GRN.purchase_order))
+        )
         if company_id:
             stmt_payments = stmt_payments.join(PurchaseEntry, VendorPayment.purchase_entry_id == PurchaseEntry.id, isouter=True).filter(
                 (PurchaseEntry.company_id == company_id) | (VendorPayment.purchase_entry_id == None)
@@ -374,22 +382,36 @@ class ReportService:
         # 4. Merge entries chronologically
         entries = []
         for bill in bills:
+            cust_bill_no = (
+                bill.grn.purchase_order.cust_bill_no
+                if (bill.grn and bill.grn.purchase_order and bill.grn.purchase_order.cust_bill_no)
+                else bill.invoice_number
+            )
             entries.append({
                 "date": bill.billing_date,
                 "tx_type": "Purchase Bill",
-                "reference_no": bill.invoice_number,
+                "reference_no": cust_bill_no,
                 "debit": bill.total_amount,
                 "credit": 0.0
             })
         for pay in payments:
             ref_no = pay.reference_number
+            bill_ref = None
+            if pay.purchase_entry:
+                pe = pay.purchase_entry
+                bill_ref = (
+                    pe.grn.purchase_order.cust_bill_no
+                    if (pe.grn and pe.grn.purchase_order and pe.grn.purchase_order.cust_bill_no)
+                    else pe.invoice_number
+                )
+
             if not ref_no or ref_no == "-":
-                if pay.purchase_entry:
-                    ref_no = pay.purchase_entry.invoice_number
+                if bill_ref:
+                    ref_no = bill_ref
                 else:
                     ref_no = "Advance Payment"
-            elif pay.purchase_entry:
-                ref_no = f"{ref_no} ({pay.purchase_entry.invoice_number})"
+            elif bill_ref:
+                ref_no = f"{ref_no} ({bill_ref})"
             
             entries.append({
                 "date": pay.payment_date,
@@ -2011,7 +2033,11 @@ class ReportService:
                 opening_bal_type = supp.opening_bal_type or "Cr"
 
             # Purchase Bills
-            stmt_bills = select(PurchaseEntry).filter(PurchaseEntry.supplier_id == party_id, PurchaseEntry.status != "Cancelled")
+            stmt_bills = (
+                select(PurchaseEntry)
+                .filter(PurchaseEntry.supplier_id == party_id, PurchaseEntry.status != "Cancelled")
+                .options(selectinload(PurchaseEntry.grn).selectinload(GRN.purchase_order))
+            )
             if company_id:
                 stmt_bills = stmt_bills.filter(PurchaseEntry.company_id == company_id)
             if start_dt:
@@ -2022,17 +2048,26 @@ class ReportService:
             bills = q_bills.scalars().all()
 
             for bill in bills:
+                cust_bill_no = (
+                    bill.grn.purchase_order.cust_bill_no
+                    if (bill.grn and bill.grn.purchase_order and bill.grn.purchase_order.cust_bill_no)
+                    else (bill.invoice_number or "N/A")
+                )
                 entries.append({
                     "tx_key": f"bill_{bill.id}",
                     "date": bill.billing_date,
                     "tx_type": "Purchase Bill",
-                    "reference_no": bill.invoice_number or "N/A",
+                    "reference_no": cust_bill_no,
                     "debit": float(bill.total_amount or 0.0),
                     "credit": 0.0
                 })
 
             # Vendor Payments
-            stmt_vpay = select(VendorPayment).filter(VendorPayment.supplier_id == party_id).options(selectinload(VendorPayment.purchase_entry))
+            stmt_vpay = (
+                select(VendorPayment)
+                .filter(VendorPayment.supplier_id == party_id)
+                .options(selectinload(VendorPayment.purchase_entry).selectinload(PurchaseEntry.grn).selectinload(GRN.purchase_order))
+            )
             if company_id:
                 stmt_vpay = stmt_vpay.join(PurchaseEntry, VendorPayment.purchase_entry_id == PurchaseEntry.id, isouter=True).filter(
                     (PurchaseEntry.company_id == company_id) | (VendorPayment.purchase_entry_id == None)
@@ -2046,8 +2081,18 @@ class ReportService:
 
             for vpay in vpayments:
                 ref_no = vpay.reference_number
+                bill_ref = None
+                if vpay.purchase_entry:
+                    pe = vpay.purchase_entry
+                    bill_ref = (
+                        pe.grn.purchase_order.cust_bill_no
+                        if (pe.grn and pe.grn.purchase_order and pe.grn.purchase_order.cust_bill_no)
+                        else pe.invoice_number
+                    )
+
                 if not ref_no or ref_no == "-":
-                    ref_no = vpay.purchase_entry.invoice_number if vpay.purchase_entry else "Advance Payment"
+                    ref_no = bill_ref if bill_ref else "Advance Payment"
+
                 entries.append({
                     "tx_key": f"vpay_{vpay.id}",
                     "date": vpay.payment_date,
