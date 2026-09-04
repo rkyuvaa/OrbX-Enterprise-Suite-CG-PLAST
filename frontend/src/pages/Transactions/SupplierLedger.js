@@ -100,7 +100,7 @@ const SupplierLedger = () => {
   const handleExportCSV = () => {
     if (!ledgerData || !ledgerData.transactions || ledgerData.transactions.length === 0) return;
     
-    const headers = ['Date', 'Transaction Type', 'Reference No', 'Debit (Purchased)', 'Credit (Paid)', 'Running Balance'];
+    const headers = ['Date', 'Transaction Type', 'Customer Bill No', 'Debit (Purchased)', 'Credit (Paid)', 'Running Balance'];
     const rows = ledgerData.transactions.map((tx) => [
       new Date(tx.date).toLocaleDateString('en-IN'),
       tx.tx_type,
@@ -136,7 +136,7 @@ const SupplierLedger = () => {
       })
     },
     { id: 'tx_type', label: 'Transaction Type' },
-    { id: 'reference_no', label: 'Reference No' },
+    { id: 'reference_no', label: 'Customer Bill No' },
     { id: 'debit', label: 'Debit (₹)', render: (row) => row.debit > 0 ? `₹${row.debit.toFixed(2)}` : '-' },
     { id: 'credit', label: 'Credit (₹)', render: (row) => row.credit > 0 ? `₹${row.credit.toFixed(2)}` : '-' },
     { id: 'running_balance', label: 'Running Balance (₹)', render: (row) => `₹${row.running_balance.toFixed(2)}` }
@@ -445,7 +445,7 @@ const SupplierLedger = () => {
                 <TableRow sx={{ backgroundColor: '#f1f5f9' }}>
                   <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Reference No</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Customer Bill No</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700 }}>Debit (₹)</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700 }}>Credit (₹)</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700 }}>Balance (₹)</TableCell>

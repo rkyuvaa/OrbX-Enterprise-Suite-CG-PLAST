@@ -203,7 +203,7 @@ const MyLedger = () => {
   const handleExportCSV = () => {
     if (!transactions || transactions.length === 0) return;
 
-    const headers = ['Date', 'Reference No', 'Description', 'Debit (₹)', 'Credit (₹)', 'Additional Amount (₹)', 'Balance (₹)'];
+    const headers = ['Date', partyType === 'SUPPLIER' ? 'Customer Bill No' : 'Reference No', 'Description', 'Debit (₹)', 'Credit (₹)', 'Additional Amount (₹)', 'Balance (₹)'];
     const rows = transactions.map((tx) => [
       new Date(tx.date).toLocaleDateString('en-IN'),
       tx.reference_no,
@@ -237,7 +237,7 @@ const MyLedger = () => {
         year: 'numeric'
       })
     },
-    { id: 'reference_no', label: 'Reference No', render: (row) => <strong>{row.reference_no}</strong> },
+    { id: 'reference_no', label: partyType === 'SUPPLIER' ? 'Customer Bill No' : 'Reference No', render: (row) => <strong>{row.reference_no}</strong> },
     { id: 'tx_type', label: 'Description' },
     { id: 'debit', label: 'Debit (₹)', render: (row) => row.debit > 0 ? `₹${row.debit.toFixed(2)}` : '-' },
     { id: 'credit', label: 'Credit (₹)', render: (row) => row.credit > 0 ? `₹${row.credit.toFixed(2)}` : '-' },
@@ -631,7 +631,7 @@ const MyLedger = () => {
               <TableHead>
                 <TableRow sx={{ backgroundColor: '#f1f5f9' }}>
                   <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Reference No</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>{partyType === 'SUPPLIER' ? 'Customer Bill No' : 'Reference No'}</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700 }}>Debit (₹)</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700 }}>Credit (₹)</TableCell>
