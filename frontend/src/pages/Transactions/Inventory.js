@@ -261,7 +261,7 @@ const Inventory = () => {
           qty: parseFloat(i.qty),
           rate: parseFloat(i.rate) || 0,
           discount_amount: parseFloat(i.discount_amount) || 0,
-          tax_rate: parseFloat(i.tax_rate) || 18
+          tax_rate: (i.tax_rate !== '' && i.tax_rate !== null && i.tax_rate !== undefined && !isNaN(parseFloat(i.tax_rate))) ? parseFloat(i.tax_rate) : 0
         }))
       };
       await apiClient.post('/inventory/transfers', payload);
@@ -536,7 +536,7 @@ const Inventory = () => {
   const transferTax = transferItems.reduce((acc, item) => {
     const amt = (parseInt(item.qty) || 0) * (parseFloat(item.rate) || 0);
     const disc = parseFloat(item.discount_amount) || 0;
-    const rate = parseFloat(item.tax_rate) || 18;
+    const rate = (item.tax_rate !== '' && item.tax_rate !== null && item.tax_rate !== undefined && !isNaN(parseFloat(item.tax_rate))) ? parseFloat(item.tax_rate) : 0;
     return acc + ((amt - disc) * rate / 100);
   }, 0);
   const transferGrandTotal = transferSubtotal - transferDiscount + transferTax;
@@ -974,7 +974,7 @@ const Inventory = () => {
                         <TableCell sx={{ fontSize: '0.85rem', fontWeight: 700 }} align="right">{item.qty}</TableCell>
                         <TableCell sx={{ fontSize: '0.85rem' }} align="right">₹{(item.rate || 0).toFixed(2)}</TableCell>
                         <TableCell sx={{ fontSize: '0.85rem', color: 'text.secondary' }} align="right">₹{(item.discount_amount || 0).toFixed(2)}</TableCell>
-                        <TableCell sx={{ fontSize: '0.85rem' }} align="right">{item.tax_rate || 18}%</TableCell>
+                        <TableCell sx={{ fontSize: '0.85rem' }} align="right">{item.tax_rate !== undefined && item.tax_rate !== null ? item.tax_rate : 0}%</TableCell>
                         <TableCell sx={{ fontSize: '0.85rem', fontWeight: 700 }} align="right">₹{(item.amount || totalVal).toFixed(2)}</TableCell>
                       </TableRow>
                     );

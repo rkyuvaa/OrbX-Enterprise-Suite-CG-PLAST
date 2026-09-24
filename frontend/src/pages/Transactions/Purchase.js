@@ -483,7 +483,7 @@ const Purchase = () => {
         product_type: quickProductType,
         category_id: null,
         uom: quickProductUOM,
-        tax_rate: parseFloat(quickProductTaxRate) || 18.0,
+        tax_rate: (quickProductTaxRate !== '' && !isNaN(parseFloat(quickProductTaxRate))) ? parseFloat(quickProductTaxRate) : 0.0,
         purchase_price: parseFloat(quickProductPurchasePrice) || 0.0,
         selling_price: parseFloat(quickProductSellingPrice) || 0.0,
         min_stock_level: 0.0
@@ -568,7 +568,7 @@ const Purchase = () => {
           product_id: item.product_id,
           qty: parseFloat(item.qty) || 1,
           rate: parseFloat(item.rate) || 0,
-          tax_rate: parseFloat(item.tax_rate) || 18
+          tax_rate: (item.tax_rate !== '' && item.tax_rate !== null && item.tax_rate !== undefined && !isNaN(parseFloat(item.tax_rate))) ? parseFloat(item.tax_rate) : 0
         }))
       };
       if (selectedPO) {
@@ -773,7 +773,12 @@ const Purchase = () => {
   ];
 
   const poTotalAmountSum = poItems.reduce((acc, item) => acc + (parseFloat(item.qty) || 0) * (parseFloat(item.rate) || 0), 0);
-  const poTotalTaxSum = poItems.reduce((acc, item) => acc + ((parseFloat(item.qty) || 0) * (parseFloat(item.rate) || 0) * (parseFloat(item.tax_rate) || 18) / 100), 0);
+  const poTotalTaxSum = poItems.reduce((acc, item) => {
+    const qty = parseFloat(item.qty) || 0;
+    const rate = parseFloat(item.rate) || 0;
+    const taxRate = (item.tax_rate !== '' && item.tax_rate !== null && item.tax_rate !== undefined && !isNaN(parseFloat(item.tax_rate))) ? parseFloat(item.tax_rate) : 0;
+    return acc + (qty * rate * taxRate / 100);
+  }, 0);
   const printBranch = selectedPO ? branches.find((b) => b.id === selectedPO.company_id) : null;
   const activePrintCompany = printBranch || company;
 
@@ -1003,8 +1008,9 @@ const Purchase = () => {
                     <TextField
                       type="number"
                       size="small"
-                      value={item.qty}
-                      onChange={(e) => handleItemChange(idx, 'qty', parseInt(e.target.value) || 0)}
+                      value={item.qty ?? ''}
+                      onChange={(e) => handleItemChange(idx, 'qty', e.target.value)}
+                      onBlur={() => handleItemChange(idx, 'qty', item.qty === '' ? 0 : parseInt(item.qty) || 0)}
                       inputProps={{ style: { padding: '4px 6px', textAlign: 'center' } }}
                       sx={{ '& .MuiInputBase-root': { height: 32 } }}
                     />
@@ -1013,9 +1019,9 @@ const Purchase = () => {
                     <TextField
                       type="number"
                       size="small"
-                      value={item.rate}
-                      onChange={(e) => handleItemChange(idx, 'rate', parseFloat(e.target.value) || 0)}
-                      onBlur={() => handleItemChange(idx, 'rate', parseFloat(parseFloat(item.rate || 0).toFixed(2)))}
+                      value={item.rate ?? ''}
+                      onChange={(e) => handleItemChange(idx, 'rate', e.target.value)}
+                      onBlur={() => handleItemChange(idx, 'rate', item.rate === '' ? 0 : parseFloat(item.rate) || 0)}
                       inputProps={{ style: { padding: '4px 6px', textAlign: 'center' } }}
                       sx={{ '& .MuiInputBase-root': { height: 32 } }}
                     />
@@ -1024,15 +1030,20 @@ const Purchase = () => {
                     <TextField
                       type="number"
                       size="small"
-                      value={item.tax_rate}
-                      onChange={(e) => handleItemChange(idx, 'tax_rate', parseFloat(e.target.value) || 0)}
-                      onBlur={() => handleItemChange(idx, 'tax_rate', parseFloat(parseFloat(item.tax_rate || 0).toFixed(2)))}
+                      value={item.tax_rate ?? ''}
+                      onChange={(e) => handleItemChange(idx, 'tax_rate', e.target.value)}
+                      onBlur={() => handleItemChange(idx, 'tax_rate', item.tax_rate === '' ? 0 : parseFloat(item.tax_rate) || 0)}
                       inputProps={{ style: { padding: '4px 6px', textAlign: 'center' } }}
                       sx={{ '& .MuiInputBase-root': { height: 32 } }}
                     />
                   </TableCell>
                   <TableCell align="right" sx={{ py: 0.5, px: 0.5, fontWeight: 600 }}>
-                    {((item.qty * item.rate) * (1 + item.tax_rate / 100)).toFixed(2)}
+                    {(() => {
+                      const qty = parseFloat(item.qty) || 0;
+                      const rate = parseFloat(item.rate) || 0;
+                      const taxRate = (item.tax_rate !== '' && item.tax_rate !== null && item.tax_rate !== undefined && !isNaN(parseFloat(item.tax_rate))) ? parseFloat(item.tax_rate) : 0;
+                      return ((qty * rate) * (1 + taxRate / 100)).toFixed(2);
+                    })()}
                   </TableCell>
                   <TableCell align="center" sx={{ py: 0.5, px: 0.5 }}>
                     <IconButton color="error" size="small" onClick={() => handleRemoveItemRow(idx)} disabled={poItems.length === 1}>
@@ -1338,7 +1349,7 @@ const Purchase = () => {
                       <TableCell align="center">{item.sku || 'N/A'}</TableCell>
                       <TableCell align="center">{item.qty}</TableCell>
                       <TableCell align="center">{item.rate.toFixed(2)}</TableCell>
-                      <TableCell align="center">{item.tax_rate}%</TableCell>
+                      <TableCell align="center">{item.tax_rate !== undefined && item.tax_rate !== null ? item.tax_rate : 0}%</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 600 }}>{item.amount.toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
