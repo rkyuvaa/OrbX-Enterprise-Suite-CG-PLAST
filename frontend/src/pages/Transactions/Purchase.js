@@ -665,7 +665,7 @@ const Purchase = () => {
 
   const poColumns = [
     { id: 'po_number', label: 'PO Number', render: (row) => row.po_number || `PO-${row.id.substring(0, 6).toUpperCase()}` },
-    { id: 'date', label: 'Order Date', render: (row) => new Date(row.date).toLocaleDateString() },
+    { id: 'date', label: 'Order Date', render: (row) => new Date(row.date).toLocaleDateString('en-GB') },
     {
       id: 'supplier_name',
       label: 'Supplier Vendor',
@@ -707,7 +707,7 @@ const Purchase = () => {
 
   const grnColumns = [
     { id: 'grn_number', label: 'GRN Number', render: (row) => row.grn_number || `GRN-${row.id.substring(0, 6).toUpperCase()}` },
-    { id: 'date', label: 'Received Date', render: (row) => new Date(row.date).toLocaleDateString() },
+    { id: 'date', label: 'Received Date', render: (row) => new Date(row.date).toLocaleDateString('en-GB') },
     {
       id: 'purchase_order_id',
       label: 'Linked PO Ref',
@@ -743,7 +743,7 @@ const Purchase = () => {
   ];
 
   const billColumns = [
-    { id: 'billing_date', label: 'Bill Date', render: (row) => new Date(row.billing_date).toLocaleDateString() },
+    { id: 'billing_date', label: 'Bill Date', render: (row) => new Date(row.billing_date).toLocaleDateString('en-GB') },
     { id: 'invoice_number', label: 'Supplier Invoice #' },
     {
       id: 'supplier_name',

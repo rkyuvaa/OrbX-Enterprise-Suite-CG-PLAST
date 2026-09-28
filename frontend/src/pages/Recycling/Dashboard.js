@@ -392,7 +392,7 @@ const RecyclingDashboard = () => {
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <Typography sx={{ fontWeight: 700, fontSize: '0.95rem' }}>{log.finished_product_name}</Typography>
                           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                            {new Date(log.date).toLocaleDateString()}
+                            {new Date(log.date).toLocaleDateString('en-GB')}
                           </Typography>
                         </Box>
                         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 1.5, fontSize: '0.85rem' }}>
@@ -429,7 +429,7 @@ const RecyclingDashboard = () => {
                   <TableBody>
                     {filteredProductions.map((log) => (
                       <TableRow key={log.id}>
-                        <TableCell>{new Date(log.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(log.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell sx={{ fontWeight: 600 }}>{log.finished_product_name}</TableCell>
                         <TableCell align="right">{log.input_weight.toLocaleString()}</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700 }}>{log.output_weight.toLocaleString()}</TableCell>

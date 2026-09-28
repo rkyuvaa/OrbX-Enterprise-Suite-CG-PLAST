@@ -106,7 +106,7 @@ const SalesReport = () => {
 
     const rows = flatItems.map((item) => [
       item.invoice_number,
-      new Date(item.date).toLocaleDateString(),
+      new Date(item.date).toLocaleDateString('en-GB'),
       item.customer_name,
       item.customer_gstin,
       item.place_of_supply.replace(/,/g, ' '),
@@ -250,7 +250,7 @@ const SalesReport = () => {
                 flatItems.map((row, idx) => (
                   <TableRow hover key={idx} sx={{ backgroundColor: idx % 2 === 1 ? '#f8fafc' : '#ffffff' }}>
                     <TableCell sx={{ fontWeight: 500 }}>{row.invoice_number}</TableCell>
-                    <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(row.date).toLocaleDateString('en-GB')}</TableCell>
                     <TableCell>{row.customer_name}</TableCell>
                     <TableCell>{row.customer_gstin}</TableCell>
                     <TableCell>{row.place_of_supply}</TableCell>

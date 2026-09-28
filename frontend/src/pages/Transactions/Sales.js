@@ -677,7 +677,7 @@ const Sales = () => {
 
   const soColumns = [
     { id: 'so_number', label: 'SO Number', render: (row) => row.so_number || `SO-${row.id.substring(0, 6).toUpperCase()}` },
-    { id: 'date', label: 'Order Date', render: (row) => new Date(row.date).toLocaleDateString() },
+    { id: 'date', label: 'Order Date', render: (row) => new Date(row.date).toLocaleDateString('en-GB') },
     {
       id: 'customer_name',
       label: 'Customer',
@@ -731,7 +731,7 @@ const Sales = () => {
         </Typography>
       ) : '-'
     },
-    { id: 'date', label: 'Billing Date', render: (row) => new Date(row.date).toLocaleDateString() },
+    { id: 'date', label: 'Billing Date', render: (row) => new Date(row.date).toLocaleDateString('en-GB') },
     {
       id: 'customer_name',
       label: 'Customer Name',
@@ -1131,7 +1131,7 @@ const Sales = () => {
             </MenuItem>
             {availableDCs.map((dc) => (
               <MenuItem key={dc.id} value={dc.id}>
-                {dc.challan_number} (Created: {new Date(dc.date).toLocaleDateString()})
+                {dc.challan_number} (Created: {new Date(dc.date).toLocaleDateString('en-GB')})
               </MenuItem>
             ))}
           </TextField>

@@ -465,7 +465,7 @@ const Inventory = () => {
   ];
 
   const transferColumns = [
-    { id: 'date', label: 'Date', render: (row) => new Date(row.date).toLocaleDateString() },
+    { id: 'date', label: 'Date', render: (row) => new Date(row.date).toLocaleDateString('en-GB') },
     { id: 'challan_number', label: 'Challan No.', render: (row) => <strong>{row.challan_number}</strong> },
     { id: 'company_name', label: 'Company' },
     {
@@ -905,7 +905,7 @@ const Inventory = () => {
                   </span>
                 </Typography>
                 <Typography variant="body2" sx={{ fontSize: '0.85rem', color: '#475569', mt: 0.5 }}>
-                  Date: <strong>{selectedTransfer ? new Date(selectedTransfer.date).toLocaleDateString() : ''}</strong>
+                  Date: <strong>{selectedTransfer ? new Date(selectedTransfer.date).toLocaleDateString('en-GB') : ''}</strong>
                 </Typography>
                 <Typography variant="body2" sx={{ fontSize: '0.85rem', color: '#475569', mt: 0.5 }}>
                   Vehicle No: <strong>{selectedTransfer?.vehicle_no || 'N/A'}</strong>

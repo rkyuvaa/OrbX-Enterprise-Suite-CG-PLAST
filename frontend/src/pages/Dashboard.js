@@ -240,7 +240,7 @@ const Dashboard = () => {
                         </Typography>
                       </TableCell>
                       <TableCell align="center" sx={{ fontSize: '0.825rem' }}>
-                        {new Date(row.date).toLocaleDateString()}
+                        {new Date(row.date).toLocaleDateString('en-GB')}
                       </TableCell>
                       <TableCell align="right" sx={{ fontWeight: 600 }}>
                         ₹{row.amount.toFixed(2)}

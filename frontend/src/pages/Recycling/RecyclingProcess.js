@@ -408,7 +408,7 @@ const RecyclingProcess = () => {
                     {activeProcesses.map((p) => (
                       <TableRow key={p.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                         <TableCell sx={{ fontWeight: 700, color: '#1e3c72' }}>{p.manufacturing_no}</TableCell>
-                        <TableCell>{new Date(p.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(p.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell sx={{ fontWeight: 600 }}>{p.product_to_recycle_name}</TableCell>
                         <TableCell>₹{p.process_expenses.toFixed(2)}</TableCell>
                         <TableCell>
@@ -476,7 +476,7 @@ const RecyclingProcess = () => {
                     {completedProcesses.map((p) => (
                       <TableRow key={p.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                         <TableCell sx={{ fontWeight: 700, color: '#2d6a4f' }}>{p.manufacturing_no}</TableCell>
-                        <TableCell>{new Date(p.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(p.date).toLocaleDateString('en-GB')}</TableCell>
                         <TableCell sx={{ fontWeight: 600 }}>{p.product_to_recycle_name}</TableCell>
                         <TableCell>₹{p.process_expenses.toFixed(2)}</TableCell>
                         <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>
@@ -692,7 +692,7 @@ const RecyclingProcess = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={4}>
                   <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 700, textTransform: 'uppercase' }}>Date Started</Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 700 }}>{new Date(selectedProcess.date).toLocaleDateString()}</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 700 }}>{new Date(selectedProcess.date).toLocaleDateString('en-GB')}</Typography>
                 </Grid>
                 <Grid item xs={12} sm={4}>
                   <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 700, textTransform: 'uppercase' }}>Product to Recycle</Typography>
@@ -826,7 +826,7 @@ const RecyclingProcess = () => {
                 <Grid item xs={12} sm={4}>
                   <TextField
                     label="Date"
-                    value={selectedProcess ? new Date(selectedProcess.date).toLocaleDateString() : ''}
+                    value={selectedProcess ? new Date(selectedProcess.date).toLocaleDateString('en-GB') : ''}
                     disabled
                     variant="outlined"
                     size="small"
