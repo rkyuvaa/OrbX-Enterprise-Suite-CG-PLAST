@@ -518,6 +518,7 @@ const MyLedger = () => {
         <Box
           ref={printRef}
           sx={{
+            position: 'relative',
             width: '100%',
             maxWidth: '180mm',
             minHeight: '265mm',
@@ -658,6 +659,21 @@ const MyLedger = () => {
           <Box sx={{ mt: 6, textAlign: 'center' }}>
             <Typography variant="caption" color="textSecondary">
               This is a computer-generated My Ledger statement of accounts. No signature required.
+            </Typography>
+          </Box>
+          {/* OrbX Footer */}
+          <Box sx={{
+            position: 'absolute',
+            bottom: '10mm',
+            left: '15mm',
+            '@media print': {
+              position: 'fixed',
+              bottom: '10mm',
+              left: '15mm',
+            }
+          }}>
+            <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.65rem', fontWeight: 500 }}>
+              Powered by OrbX | orbx.in
             </Typography>
           </Box>
         </Box>

@@ -1028,14 +1028,16 @@ const Purchase = () => {
                   </TableCell>
                   <TableCell sx={{ py: 0.5, px: 0.5 }}>
                     <TextField
-                      type="number"
+                      select
                       size="small"
-                      value={item.tax_rate ?? ''}
-                      onChange={(e) => handleItemChange(idx, 'tax_rate', e.target.value)}
-                      onBlur={() => handleItemChange(idx, 'tax_rate', item.tax_rate === '' ? 0 : parseFloat(item.tax_rate) || 0)}
-                      inputProps={{ style: { padding: '4px 6px', textAlign: 'center' } }}
-                      sx={{ '& .MuiInputBase-root': { height: 32 } }}
-                    />
+                      value={item.tax_rate !== '' && item.tax_rate !== null ? item.tax_rate : 18}
+                      onChange={(e) => handleItemChange(idx, 'tax_rate', parseFloat(e.target.value))}
+                      sx={{ '& .MuiInputBase-root': { height: 32 }, '& .MuiSelect-select': { padding: '4px 8px', textAlign: 'center' }, width: '100%' }}
+                    >
+                      <MenuItem value={0}>0</MenuItem>
+                      <MenuItem value={5}>5</MenuItem>
+                      <MenuItem value={18}>18</MenuItem>
+                    </TextField>
                   </TableCell>
                   <TableCell align="right" sx={{ py: 0.5, px: 0.5, fontWeight: 600 }}>
                     {(() => {
@@ -1220,6 +1222,7 @@ const Purchase = () => {
           <Box
             ref={printRef}
             sx={{
+              position: 'relative',
               width: '100%',
               maxWidth: '180mm',
               minHeight: '265mm',
@@ -1456,6 +1459,21 @@ const Purchase = () => {
             <Box sx={{ textAlign: 'center', mt: 4 }}>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
                 {printBranch?.invoice_footer || 'Thank you for your business!'}
+              </Typography>
+            </Box>
+            {/* OrbX Footer */}
+            <Box sx={{
+              position: 'absolute',
+              bottom: '10mm',
+              left: '15mm',
+              '@media print': {
+                position: 'fixed',
+                bottom: '10mm',
+                left: '15mm',
+              }
+            }}>
+              <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.65rem', fontWeight: 500 }}>
+                Powered by OrbX | orbx.in
               </Typography>
             </Box>
           </Box>

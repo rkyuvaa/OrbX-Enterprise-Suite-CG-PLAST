@@ -839,6 +839,7 @@ const Inventory = () => {
           <Box
             ref={printRef}
             sx={{
+              position: 'relative',
               backgroundColor: '#ffffff',
               color: '#000000',
               fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -1045,6 +1046,21 @@ const Inventory = () => {
                 <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>Authorized Signatory</Typography>
               </Box>
             </Box>
+          </Box>
+          {/* OrbX Footer */}
+          <Box sx={{
+            position: 'absolute',
+            bottom: '10mm',
+            left: '15mm',
+            '@media print': {
+              position: 'fixed',
+              bottom: '10mm',
+              left: '15mm',
+            }
+          }}>
+            <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.65rem', fontWeight: 500 }}>
+              Powered by OrbX | orbx.in
+            </Typography>
           </Box>
         </Box>
       </CommonModal>
