@@ -58,7 +58,7 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: erp_nginx
+    container_name: erp_nginx_orbx
     restart: always
     ports:
       - "80:80"
