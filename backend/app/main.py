@@ -67,7 +67,7 @@ app.mount("/api/v1/static", StaticFiles(directory="static"), name="static")
 # Allows our React frontend on different ports or environments to communicate smoothly
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust in production to frontend domain
+    allow_origins=["http://localhost:3000", "http://localhost:3002", "http://localhost:8040", "*"],  # Include all local development ports
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
