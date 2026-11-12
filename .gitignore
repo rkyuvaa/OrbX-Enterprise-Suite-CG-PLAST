@@ -24,6 +24,10 @@ build/
 # Logs
 *.log
 
+# SSL / Certbot credentials
+certbot/cloudflare.ini
+ssl/
+
 # OS files
 .DS_Store
 Thumbs.db

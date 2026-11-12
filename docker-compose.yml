@@ -61,7 +61,7 @@ services:
     container_name: erp_nginx_orbx
     restart: always
     ports:
-      - "8040:8040"
+      - "443:443"
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -69,6 +69,17 @@ services:
     depends_on:
       - backend
       - frontend
+
+  certbot:
+    image: certbot/dns-cloudflare:latest
+    container_name: erp_certbot_orbx
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --non-interactive --quiet --agree-tos --email ${CERTBOT_EMAIL:-admin@orbx.com} && sleep 12h & wait ${!}; done'"
+    volumes:
+      - ./ssl:/etc/letsencrypt:rw
+      - ./certbot/cloudflare.ini:/etc/letsencrypt/cloudflare.ini:ro
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN:-}
+    restart: unless-stopped
 
 volumes:
   pgdata:

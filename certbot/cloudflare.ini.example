@@ -1,0 +1,6 @@
+# Cloudflare DNS credentials for certbot
+# Copy this file to cloudflare.ini and fill in your API token
+# Get your API token from: https://dash.cloudflare.com/profile/api-tokens
+# Token needs: DNS:Edit permission for cgp.orbx.in zone
+
+dns_cloudflare_api_token = your_cloudflare_api_token_here
