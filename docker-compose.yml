@@ -73,7 +73,7 @@ services:
   certbot:
     image: certbot/dns-cloudflare:latest
     container_name: erp_certbot_orbx
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --non-interactive --quiet --agree-tos --email ${CERTBOT_EMAIL:-admin@orbx.com} && sleep 12h & wait ${!}; done'"
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --non-interactive --quiet --agree-tos --email $$CERTBOT_EMAIL && sleep 12h & wait $$!; done'"
     volumes:
       - ./ssl:/etc/letsencrypt:rw
       - ./certbot/cloudflare.ini:/etc/letsencrypt/cloudflare.ini:ro
